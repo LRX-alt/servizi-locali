@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { professionisti, serviziPubblici, categorie } from '@/data/mockData';
+import { serviziPubblici, categorie } from '@/data/mockData';
 import { authHelpers, professionistiHelpers, recensioniHelpers, preferitiHelpers } from '@/lib/supabase-helpers';
 import type { Professionista, ServizioPubblico, Categoria, Recensione, Utente, LoginForm, RegisterForm, LoginProfessionistaForm, RegisterProfessionistaForm, UserType, SupabaseUtente, SupabaseProfessionista } from '@/types';
 
@@ -231,9 +231,10 @@ export const useAppStore = create<AppState>()(
               });
             }
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante il login';
           set({ 
-            error: error.message || 'Errore durante il login', 
+            error: errorMessage, 
             authLoading: false 
           });
           throw error;
@@ -266,9 +267,10 @@ export const useAppStore = create<AppState>()(
               });
             }
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante la registrazione';
           set({ 
-            error: error.message || 'Errore durante la registrazione', 
+            error: errorMessage, 
             authLoading: false 
           });
           throw error;
@@ -297,9 +299,10 @@ export const useAppStore = create<AppState>()(
               throw new Error('Profilo professionista non trovato');
             }
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante il login';
           set({ 
-            error: error.message || 'Errore durante il login', 
+            error: errorMessage, 
             authLoading: false 
           });
           throw error;
@@ -338,9 +341,10 @@ export const useAppStore = create<AppState>()(
               });
             }
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante la registrazione';
           set({ 
-            error: error.message || 'Errore durante la registrazione', 
+            error: errorMessage, 
             authLoading: false 
           });
           throw error;
@@ -356,7 +360,7 @@ export const useAppStore = create<AppState>()(
             userType: null,
             isAuthenticated: false 
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Logout error:', error);
         }
       },
@@ -369,8 +373,9 @@ export const useAppStore = create<AppState>()(
             if (updatedProfile) {
               set({ utente: convertSupabaseUtente(updatedProfile) });
             }
-          } catch (error: any) {
-            set({ error: error.message });
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiornamento';
+            set({ error: errorMessage });
           }
         }
       },
@@ -383,8 +388,9 @@ export const useAppStore = create<AppState>()(
             if (updatedProfile) {
               set({ professionistaLoggato: convertSupabaseProfessionista(updatedProfile) });
             }
-          } catch (error: any) {
-            set({ error: error.message });
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiornamento';
+            set({ error: errorMessage });
           }
         }
       },
@@ -402,8 +408,9 @@ export const useAppStore = create<AppState>()(
           
           // Ricarica i professionisti per aggiornare i rating
           await get().loadProfessionisti();
-        } catch (error: any) {
-          set({ error: error.message });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiunta della recensione';
+          set({ error: errorMessage });
         }
       },
 
@@ -412,8 +419,9 @@ export const useAppStore = create<AppState>()(
         if (utente) {
           try {
             await preferitiHelpers.addToFavorites(utente.id, professionistaId);
-          } catch (error: any) {
-            set({ error: error.message });
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiunta ai preferiti';
+            set({ error: errorMessage });
           }
         }
       },
@@ -423,8 +431,9 @@ export const useAppStore = create<AppState>()(
         if (utente) {
           try {
             await preferitiHelpers.removeFromFavorites(utente.id, professionistaId);
-          } catch (error: any) {
-            set({ error: error.message });
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Errore durante la rimozione dai preferiti';
+            set({ error: errorMessage });
           }
         }
       },
@@ -436,8 +445,9 @@ export const useAppStore = create<AppState>()(
           const supabaseProfessionisti = await professionistiHelpers.getAllProfessionisti();
           const professionisti = supabaseProfessionisti.map(convertSupabaseProfessionista);
           set({ professionisti, professionistiFiltrati: professionisti, isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento';
+          set({ error: errorMessage, isLoading: false });
         }
       },
 
@@ -447,8 +457,9 @@ export const useAppStore = create<AppState>()(
           if (profile) {
             set({ utente: convertSupabaseUtente(profile) });
           }
-        } catch (error: any) {
-          set({ error: error.message });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento del profilo';
+          set({ error: errorMessage });
         }
       },
 
@@ -458,8 +469,9 @@ export const useAppStore = create<AppState>()(
           if (profile) {
             set({ professionistaLoggato: convertSupabaseProfessionista(profile) });
           }
-        } catch (error: any) {
-          set({ error: error.message });
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento del profilo';
+          set({ error: errorMessage });
         }
       },
     }),

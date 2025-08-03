@@ -1,169 +1,98 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useAppStore } from '@/store';
-import { serviziPubblici } from '@/data/mockData';
-import { MapPin, Phone, Clock, Navigation } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 
 export default function MappaPage() {
-  const { setServiziPubblici, serviziPubblici: servizi } = useAppStore();
-
-  useEffect(() => {
-    setServiziPubblici(serviziPubblici);
-  }, [setServiziPubblici]);
-
-  const handleNavigation = (indirizzo: string) => {
-    const encodedAddress = encodeURIComponent(indirizzo);
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    if (isIOS) {
-      window.open(`maps://maps.apple.com/?q=${encodedAddress}`, '_blank');
-    } else {
-      window.open(`https://maps.google.com/maps?q=${encodedAddress}`, '_blank');
-    }
-  };
-
-  const handleCall = (telefono: string) => {
-    window.open(`tel:${telefono}`, '_self');
-  };
-
-  const getTipoIcon = (tipo: string) => {
-    switch (tipo) {
-      case 'comune':
-        return '🏛️';
-      case 'poste':
-        return '📮';
-      case 'farmacia':
-        return '💊';
-      case 'banca':
-        return '🏦';
-      case 'ospedale':
-        return '🏥';
-      case 'ufficio':
-        return '🏢';
-      default:
-        return '🏢';
-    }
-  };
-
   return (
     <div className="space-y-8">
-      {/* Hero Section */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-gray-900">
-          Mappa Servizi
+          Mappa Interattiva
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Visualizza i servizi pubblici sulla mappa e ottieni indicazioni stradali
+          Visualizza servizi pubblici e punti di interesse sulla mappa
         </p>
       </div>
 
-      {/* Placeholder per la mappa */}
-      <div className="bg-gray-100 rounded-lg p-8 text-center">
-        <div className="max-w-md mx-auto space-y-4">
-          <div className="text-6xl">🗺️</div>
-          <h3 className="text-xl font-semibold text-gray-900">
-            Mappa Interattiva
-          </h3>
-          <p className="text-gray-600">
-            Qui verrà integrata una mappa interattiva con Google Maps per visualizzare 
-            i servizi pubblici nella tua zona.
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto">
+            <Navigation className="w-8 h-8 text-blue-600" />
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Mappa in Sviluppo
+          </h2>
+          <p className="text-gray-600 max-w-md mx-auto">
+            Questa funzionalità sarà presto disponibile. Potrai visualizzare servizi pubblici, 
+            uffici e punti di interesse sulla mappa interattiva.
           </p>
-          <p className="text-sm text-gray-500">
-            Funzionalità in sviluppo: visualizzazione marker, indicazioni stradali, 
-            ricerca per indirizzo.
-          </p>
+          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+            <MapPin className="w-4 h-4" />
+            <span>Integrazione Google Maps in arrivo</span>
+          </div>
         </div>
       </div>
 
-      {/* Lista servizi per navigazione */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-900">
-          Servizi sulla mappa
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {servizi.map((servizio) => (
-            <div
-              key={servizio.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="text-2xl">{getTipoIcon(servizio.tipo)}</div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {servizio.nome}
-                  </h3>
-                  <p className="text-sm text-gray-600 capitalize">
-                    {servizio.tipo}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">{servizio.indirizzo}</span>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">{servizio.orari}</span>
-                </div>
-
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleNavigation(servizio.indirizzo)}
-                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    <Navigation className="w-4 h-4" />
-                    <span>Naviga</span>
-                  </button>
-
-                  {servizio.telefono && (
-                    <button
-                      onClick={() => handleCall(servizio.telefono!)}
-                      className="flex items-center space-x-1 text-green-600 hover:text-green-800 text-sm font-medium"
-                    >
-                      <Phone className="w-4 h-4" />
-                      <span>Chiama</span>
-                    </button>
-                  )}
-                </div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-green-600" />
             </div>
-          ))}
+            <h3 className="text-lg font-semibold text-gray-900">Servizi Pubblici</h3>
+          </div>
+          <p className="text-gray-600">
+            Visualizza uffici comunali, farmacie, banche e altri servizi essenziali
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Navigation className="w-5 h-5 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Navigazione</h3>
+          </div>
+          <p className="text-gray-600">
+            Ottieni indicazioni stradali e calcola percorsi ottimali
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-orange-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Punti di Interesse</h3>
+          </div>
+          <p className="text-gray-600">
+            Scopri luoghi di interesse, ristoranti e attività commerciali
+          </p>
         </div>
       </div>
 
-      {/* Informazioni sulla mappa */}
-      <div className="bg-blue-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Funzionalità della mappa
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-blue-900 mb-2">
+          Funzionalità in Arrivo
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">📍 Marker</h4>
-            <p>
-              Visualizza tutti i servizi pubblici sulla mappa con marker colorati 
-              per tipo di servizio.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">🧭 Navigazione</h4>
-            <p>
-              Clicca sui marker per ottenere indicazioni stradali e avviare 
-              l'app di navigazione del dispositivo.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">🔍 Ricerca</h4>
-            <p>
-              Cerca servizi per indirizzo o tipo e filtra i risultati 
-              direttamente sulla mappa.
-            </p>
-          </div>
-        </div>
+        <ul className="text-blue-800 space-y-2">
+          <li className="flex items-center space-x-2">
+            <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+            <span>Mappa interattiva con Google Maps</span>
+          </li>
+          <li className="flex items-center space-x-2">
+            <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+            <span>Ricerca per indirizzo e categoria</span>
+          </li>
+          <li className="flex items-center space-x-2">
+            <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+            <span>Indicazioni stradali integrate</span>
+          </li>
+          <li className="flex items-center space-x-2">
+            <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+            <span>Filtri avanzati per servizi</span>
+          </li>
+        </ul>
       </div>
     </div>
   );

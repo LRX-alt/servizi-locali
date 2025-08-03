@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Map, Users, Building2, User, Menu, X, LogIn, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/store';
+import { Menu, X, User, Building2, LogOut } from 'lucide-react';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
 import LoginProfessionistaModal from './LoginProfessionistaModal';
@@ -12,304 +11,238 @@ import RegisterProfessionistaModal from './RegisterProfessionistaModal';
 import AuthTypeSelector from './AuthTypeSelector';
 
 export default function Header() {
-  const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const {
+    utente,
+    professionistaLoggato,
+    userType,
+    isAuthenticated,
+    logout
+  } = useAppStore();
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAuthTypeSelector, setShowAuthTypeSelector] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLoginProfessionistaModal, setShowLoginProfessionistaModal] = useState(false);
   const [showRegisterProfessionistaModal, setShowRegisterProfessionistaModal] = useState(false);
-  
-  const { isAuthenticated, utente, professionistaLoggato, userType, logout } = useAppStore();
 
-  const navItems = [
-    { href: '/', label: 'Professionisti', icon: Users },
-    { href: '/servizi-pubblici', label: 'Servizi Pubblici', icon: Building2 },
-    { href: '/mappa', label: 'Mappa', icon: Map },
-    { href: '/dashboard', label: 'Dashboard', icon: User },
-  ];
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error: unknown) {
+      console.error('Logout error:', error);
+    }
   };
 
-  const handleLogin = async (form: any) => {
-    try {
-      await useAppStore.getState().login(form);
+  const handleAuthTypeSelect = (type: 'user' | 'professionista') => {
+    setShowAuthTypeSelector(false);
+    if (type === 'user') {
+      setShowLoginModal(true);
+    } else {
+      setShowLoginProfessionistaModal(true);
+    }
+  };
+
+  const handleSwitchToRegister = (type: 'user' | 'professionista') => {
+    if (type === 'user') {
       setShowLoginModal(false);
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
-  };
-
-  const handleRegister = async (form: any) => {
-    try {
-      await useAppStore.getState().register(form);
-      setShowRegisterModal(false);
-    } catch (error) {
-      console.error('Registration failed:', error);
-    }
-  };
-
-  const handleLoginProfessionista = async (form: any) => {
-    try {
-      await useAppStore.getState().loginProfessionista(form);
+      setShowRegisterModal(true);
+    } else {
       setShowLoginProfessionistaModal(false);
-    } catch (error) {
-      console.error('Login professionista failed:', error);
+      setShowRegisterProfessionistaModal(true);
     }
   };
 
-  const handleRegisterProfessionista = async (form: any) => {
-    try {
-      await useAppStore.getState().registerProfessionista(form);
+  const handleSwitchToLogin = (type: 'user' | 'professionista') => {
+    if (type === 'user') {
+      setShowRegisterModal(false);
+      setShowLoginModal(true);
+    } else {
       setShowRegisterProfessionistaModal(false);
-    } catch (error) {
-      console.error('Registration professionista failed:', error);
+      setShowLoginProfessionistaModal(true);
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-  };
-
-  const handleSwitchToRegister = () => {
-    setShowLoginModal(false);
-    setShowRegisterModal(true);
-  };
-
-  const handleSwitchToLogin = () => {
-    setShowRegisterModal(false);
-    setShowLoginModal(true);
-  };
-
-  const handleSwitchToRegisterProfessionista = () => {
-    setShowLoginProfessionistaModal(false);
-    setShowRegisterProfessionistaModal(true);
-  };
-
-  const handleSwitchToLoginProfessionista = () => {
-    setShowRegisterProfessionistaModal(false);
-    setShowLoginProfessionistaModal(true);
-  };
-
-  const handleSelectUser = () => {
-    setShowAuthTypeSelector(false);
-    setShowLoginModal(true);
-  };
-
-  const handleSelectProfessionista = () => {
-    setShowAuthTypeSelector(false);
-    setShowLoginProfessionistaModal(true);
-  };
-
-  const getDisplayName = () => {
-    if (userType === 'utente' && utente) {
-      return utente.nome;
-    } else if (userType === 'professionista' && professionistaLoggato) {
-      return `${professionistaLoggato.nome} (Prof.)`;
-    }
-    return '';
-  };
-
-  const getProfileLink = () => {
-    if (userType === 'utente') {
-      return '/profilo';
-    } else if (userType === 'professionista') {
-      return '/dashboard';
-    }
-    return '/profilo';
   };
 
   return (
     <>
-      <header className="bg-white shadow-sm border-b relative z-50">
+      <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">SL</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900">Servizi Locali</span>
-              </Link>
-            </div>
+            <Link href="/" className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">Servizi Locali</span>
+            </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-8">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-gray-700 hover:text-gray-900 font-medium">
+                Home
+              </Link>
+              <Link href="/servizi-pubblici" className="text-gray-700 hover:text-gray-900 font-medium">
+                Servizi Pubblici
+              </Link>
+              <Link href="/mappa" className="text-gray-700 hover:text-gray-900 font-medium">
+                Mappa
+              </Link>
+              {isAuthenticated && (
+                <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">
+                  Dashboard
+                </Link>
+              )}
             </nav>
 
-            {/* Desktop Auth Button */}
+            {/* Auth Buttons */}
             <div className="hidden md:flex items-center space-x-4">
               {isAuthenticated ? (
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-700">
+                    Ciao, {userType === 'utente' ? utente?.nome : professionistaLoggato?.nome}
+                  </span>
                   <Link
-                    href={getProfileLink()}
-                    className="flex items-center space-x-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm font-medium"
+                    href={userType === 'utente' ? '/profilo' : '/dashboard'}
+                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
                   >
-                    <User className="w-4 h-4" />
-                    <span>{getDisplayName()}</span>
+                    {userType === 'utente' ? <User className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
+                    <span className="text-sm font-medium">Profilo</span>
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-1 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors text-sm"
+                    className="flex items-center space-x-1 text-red-600 hover:text-red-800"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
+                    <span className="text-sm font-medium">Logout</span>
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowAuthTypeSelector(true)}
-                  className="flex items-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span>Accedi</span>
+                  Accedi
                 </button>
               )}
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={toggleMobileMenu}
-                className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                aria-label="Toggle menu"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
-              </button>
-            </div>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
 
           {/* Mobile Navigation */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden">
-              <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href;
-                  
-                  return (
+          {isMenuOpen && (
+            <div className="md:hidden py-4 border-t border-gray-200">
+              <nav className="space-y-2">
+                <Link
+                  href="/"
+                  className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/servizi-pubblici"
+                  className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Servizi Pubblici
+                </Link>
+                <Link
+                  href="/mappa"
+                  className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Mappa
+                </Link>
+                {isAuthenticated && (
+                  <Link
+                    href="/dashboard"
+                    className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                )}
+              </nav>
+
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                {isAuthenticated ? (
+                  <div className="space-y-2">
+                    <span className="block px-3 py-2 text-sm text-gray-700">
+                      Ciao, {userType === 'utente' ? utente?.nome : professionistaLoggato?.nome}
+                    </span>
                     <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium transition-colors ${
-                        isActive
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
+                      href={userType === 'utente' ? '/profilo' : '/dashboard'}
+                      className="flex items-center space-x-2 px-3 py-2 text-blue-600 hover:text-blue-800"
+                      onClick={() => setIsMenuOpen(false)}
                     >
-                      <Icon className="w-5 h-5" />
-                      <span>{item.label}</span>
+                      {userType === 'utente' ? <User className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
+                      <span className="text-sm font-medium">Profilo</span>
                     </Link>
-                  );
-                })}
-                
-                {/* Mobile Auth */}
-                <div className="pt-3 border-t border-gray-200">
-                  {isAuthenticated ? (
-                    <div className="space-y-2">
-                      <Link
-                        href={getProfileLink()}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium bg-blue-100 text-blue-700"
-                      >
-                        <User className="w-5 h-5" />
-                        <span>Profilo - {getDisplayName()}</span>
-                      </Link>
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 w-full"
-                      >
-                        <LogOut className="w-5 h-5" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  ) : (
                     <button
                       onClick={() => {
-                        setShowAuthTypeSelector(true);
-                        setIsMobileMenuOpen(false);
+                        handleLogout();
+                        setIsMenuOpen(false);
                       }}
-                      className="flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 w-full"
+                      className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:text-red-800 w-full text-left"
                     >
-                      <LogIn className="w-5 h-5" />
-                      <span>Accedi</span>
+                      <LogOut className="w-4 h-4" />
+                      <span className="text-sm font-medium">Logout</span>
                     </button>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowAuthTypeSelector(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Accedi
+                  </button>
+                )}
               </div>
             </div>
           )}
         </div>
       </header>
 
-      {/* Auth Type Selector */}
+      {/* Modals */}
       <AuthTypeSelector
         isOpen={showAuthTypeSelector}
         onClose={() => setShowAuthTypeSelector(false)}
-        onSelectUser={handleSelectUser}
-        onSelectProfessionista={handleSelectProfessionista}
+        onSelectUser={() => handleAuthTypeSelect('user')}
+        onSelectProfessionista={() => handleAuthTypeSelect('professionista')}
       />
 
-      {/* Login Modal */}
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
-        onLogin={handleLogin}
-        onSwitchToRegister={handleSwitchToRegister}
+        onSwitchToRegister={() => handleSwitchToRegister('user')}
       />
 
-      {/* Register Modal */}
       <RegisterModal
         isOpen={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
-        onRegister={handleRegister}
-        onSwitchToLogin={handleSwitchToLogin}
+        onSwitchToLogin={() => handleSwitchToLogin('user')}
       />
 
-      {/* Login Professionista Modal */}
       <LoginProfessionistaModal
         isOpen={showLoginProfessionistaModal}
         onClose={() => setShowLoginProfessionistaModal(false)}
-        onLogin={handleLoginProfessionista}
-        onSwitchToRegister={handleSwitchToRegisterProfessionista}
+        onSwitchToRegister={() => handleSwitchToRegister('professionista')}
       />
 
-      {/* Register Professionista Modal */}
       <RegisterProfessionistaModal
         isOpen={showRegisterProfessionistaModal}
         onClose={() => setShowRegisterProfessionistaModal(false)}
-        onRegister={handleRegisterProfessionista}
-        onSwitchToLogin={handleSwitchToLoginProfessionista}
+        onSwitchToLogin={() => handleSwitchToLogin('professionista')}
       />
     </>
   );

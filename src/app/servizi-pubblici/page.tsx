@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/store';
 import { serviziPubblici } from '@/data/mockData';
-import { MapPin, Phone, Clock, Building2, Navigation } from 'lucide-react';
+import { MapPin, Phone, Clock, Navigation, Building2 } from 'lucide-react';
 
 export default function ServiziPubbliciPage() {
   const { setServiziPubblici, serviziPubblici: servizi } = useAppStore();
@@ -13,7 +13,6 @@ export default function ServiziPubbliciPage() {
   }, [setServiziPubblici]);
 
   const handleNavigation = (indirizzo: string) => {
-    // Apre l'app di navigazione del dispositivo
     const encodedAddress = encodeURIComponent(indirizzo);
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
@@ -55,74 +54,80 @@ export default function ServiziPubbliciPage() {
           Servizi Pubblici
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Trova uffici, farmacie, banche e altri servizi pubblici nella tua zona
+          Trova uffici, farmacie, banche e altri servizi essenziali nella tua zona
         </p>
       </div>
 
-      {/* Lista servizi pubblici */}
+      {/* Filtri */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Filtra per tipo di servizio
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {['tutti', 'comune', 'farmacia', 'banca', 'poste', 'ospedale'].map((tipo) => (
+            <button
+              key={tipo}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Lista servizi */}
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold text-gray-900">
           Servizi disponibili
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {servizi.map((servizio) => (
             <div
               key={servizio.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="text-3xl">{getTipoIcon(servizio.tipo)}</div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {servizio.nome}
-                    </h3>
-                    <p className="text-sm text-gray-600 capitalize">
-                      {servizio.tipo}
-                    </p>
-                  </div>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="text-2xl">{getTipoIcon(servizio.tipo)}</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    {servizio.nome}
+                  </h3>
+                  <p className="text-sm text-gray-600 capitalize">
+                    {servizio.tipo}
+                  </p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {/* Indirizzo */}
-                <div className="flex items-start space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600">{servizio.indirizzo}</p>
-                    <button
-                      onClick={() => handleNavigation(servizio.indirizzo)}
-                      className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium mt-1"
-                    >
-                      <Navigation className="w-4 h-4" />
-                      <span>Apri navigazione</span>
-                    </button>
-                  </div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-600">{servizio.indirizzo}</span>
                 </div>
 
-                {/* Orari */}
-                <div className="flex items-start space-x-2">
-                  <Clock className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-600">{servizio.orari}</p>
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-600">{servizio.orari}</span>
                 </div>
 
-                {/* Telefono */}
-                {servizio.telefono && (
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4 text-gray-400" />
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleNavigation(servizio.indirizzo)}
+                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    <Navigation className="w-4 h-4" />
+                    <span>Naviga</span>
+                  </button>
+
+                  {servizio.telefono && (
                     <button
                       onClick={() => handleCall(servizio.telefono!)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      className="flex items-center space-x-1 text-green-600 hover:text-green-800 text-sm font-medium"
                     >
-                      {servizio.telefono}
+                      <Phone className="w-4 h-4" />
+                      <span>Chiama</span>
                     </button>
-                  </div>
-                )}
-
-                {/* Descrizione */}
-                <div>
-                  <p className="text-sm text-gray-600">{servizio.descrizione}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -130,24 +135,31 @@ export default function ServiziPubbliciPage() {
         </div>
       </div>
 
-      {/* Informazioni aggiuntive */}
+      {/* Informazioni */}
       <div className="bg-blue-50 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Come utilizzare i servizi pubblici
+          Informazioni sui servizi
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Navigazione</h4>
+            <h4 className="font-medium text-gray-900 mb-2">📍 Indirizzi</h4>
             <p>
-              Clicca su "Apri navigazione" per avviare l'app di navigazione del tuo dispositivo 
-              e ottenere indicazioni stradali per raggiungere il servizio.
+              Tutti gli indirizzi sono verificati e aggiornati. Clicca su &quot;Naviga&quot; 
+              per aprire l&apos;app di navigazione del tuo dispositivo.
             </p>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Contatti</h4>
+            <h4 className="font-medium text-gray-900 mb-2">📞 Contatti</h4>
             <p>
-              Clicca sul numero di telefono per chiamare direttamente il servizio 
-              e ottenere informazioni aggiornate su orari e disponibilità.
+              I numeri di telefono sono direttamente cliccabili per avviare 
+              una chiamata immediata.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-medium text-gray-900 mb-2">🕒 Orari</h4>
+            <p>
+              Gli orari di apertura sono indicativi. Ti consigliamo di 
+              verificare sempre prima di recarti presso il servizio.
             </p>
           </div>
         </div>
