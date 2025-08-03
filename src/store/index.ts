@@ -65,6 +65,14 @@ const convertSupabaseProfessionista = (supabaseProf: SupabaseProfessionista): Pr
   };
 };
 
+type ToastType = 'success' | 'error' | 'info';
+
+interface Toast {
+  id: string;
+  message: string;
+  type: ToastType;
+}
+
 interface AppState {
   // Dati principali
   professionisti: Professionista[];
@@ -73,6 +81,18 @@ interface AppState {
   categorie: Categoria[];
   professionistaSelezionato: Professionista | null;
   categoriaSelezionata: string | null;
+  lastUpdate: number | null;
+  
+  // Paginazione
+  page: number;
+  hasMore: boolean;
+  itemsPerPage: number;
+  loadMore: () => void;
+
+  // Notifiche
+  toasts: Toast[];
+  showToast: (message: string, type?: ToastType) => void;
+  removeToast: (id: string) => void;
 
   // Filtri
   filtroRicerca: string;
@@ -140,6 +160,15 @@ export const useAppStore = create<AppState>()(
       categorie,
       professionistaSelezionato: null,
       categoriaSelezionata: null,
+      lastUpdate: null,
+      
+      // Paginazione
+      page: 1,
+      hasMore: true,
+      itemsPerPage: 9,
+
+      // Notifiche
+      toasts: [],
       filtroRicerca: '',
       filtroZona: '',
       filtroRating: null,
@@ -191,7 +220,7 @@ export const useAppStore = create<AppState>()(
       },
 
       filtraProfessionisti: () => {
-        const { professionisti, filtroRicerca, filtroZona, filtroRating, categoriaSelezionata } = get();
+        const { professionisti, filtroRicerca, filtroZona, filtroRating, categoriaSelezionata, page, itemsPerPage } = get();
         
         let filtered = [...professionisti];
 
@@ -234,12 +263,43 @@ export const useAppStore = create<AppState>()(
           }
         }
 
-        set({ professionistiFiltrati: filtered });
+        // Paginazione
+        const start = 0;
+        const end = page * itemsPerPage;
+        const hasMore = filtered.length > end;
+        const paginatedResults = filtered.slice(start, end);
+
+        set({ 
+          professionistiFiltrati: paginatedResults,
+          hasMore
+        });
       },
 
       // Azioni UI
       setLoading: (loading) => set({ isLoading: loading }),
       setError: (error) => set({ error }),
+      
+      // Notifiche
+      showToast: (message, type = 'info') => {
+        const id = Date.now().toString();
+        set(state => ({
+          toasts: [...state.toasts, { id, message, type }]
+        }));
+      },
+      
+      removeToast: (id) => {
+        set(state => ({
+          toasts: state.toasts.filter(toast => toast.id !== id)
+        }));
+      },
+
+      loadMore: () => {
+        const { page, hasMore } = get();
+        if (hasMore) {
+          set({ page: page + 1 });
+          get().filtraProfessionisti();
+        }
+      },
 
       // Azioni autenticazione utenti
       login: async (form) => {
@@ -470,11 +530,29 @@ export const useAppStore = create<AppState>()(
 
       // Azioni Supabase
       loadProfessionisti: async () => {
+        const state = get();
+        const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minuti in millisecondi
+        
+        // Verifica se i dati in cache sono ancora validi
+        const isCacheValid = state.lastUpdate && 
+                           state.professionisti.length > 0 && 
+                           Date.now() - state.lastUpdate < CACHE_TIMEOUT;
+
+        if (isCacheValid) {
+          // Usa i dati dalla cache
+          return;
+        }
+
         set({ isLoading: true });
         try {
           const supabaseProfessionisti = await professionistiHelpers.getAllProfessionisti();
           const professionisti = supabaseProfessionisti.map(convertSupabaseProfessionista);
-          set({ professionisti, professionistiFiltrati: professionisti, isLoading: false });
+          set({ 
+            professionisti, 
+            professionistiFiltrati: professionisti, 
+            lastUpdate: Date.now(),
+            isLoading: false 
+          });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento';
           set({ error: errorMessage, isLoading: false });
@@ -511,8 +589,13 @@ export const useAppStore = create<AppState>()(
         utente: state.utente,
         professionistaLoggato: state.professionistaLoggato,
         userType: state.userType,
-        isAuthenticated: state.isAuthenticated
-      })
+        isAuthenticated: state.isAuthenticated,
+        professionisti: state.professionisti,
+        professionistiFiltrati: state.professionistiFiltrati,
+        categorie: state.categorie,
+        lastUpdate: Date.now() // Per gestire la scadenza della cache
+      }),
+      version: 1
     }
   )
 ); 

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store';
 import { Professionista } from '@/types';
-import { Star, Phone, MessageCircle, Heart, MapPin, Clock, User } from 'lucide-react';
+import { Star, Phone, MessageCircle, Heart, MapPin, Clock } from 'lucide-react';
+import Avatar from './Avatar';
 import FormRecensione from './FormRecensione';
 import RecensioniList from './RecensioniList';
 
@@ -12,7 +13,7 @@ interface ProfessionistaCardProps {
 }
 
 export default function ProfessionistaCard({ professionista }: ProfessionistaCardProps) {
-  const { utente, isAuthenticated, addReview } = useAppStore();
+  const { utente, isAuthenticated, addReview, showToast } = useAppStore();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
 
@@ -28,7 +29,7 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
 
   const handleReview = () => {
     if (!isAuthenticated) {
-      alert('Devi essere loggato per scrivere una recensione');
+      showToast('Devi essere loggato per scrivere una recensione', 'error');
       return;
     }
     setShowReviewForm(true);
@@ -36,7 +37,7 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
 
   const handleFavorite = () => {
     if (!isAuthenticated) {
-      alert('Devi essere loggato per aggiungere ai preferiti');
+      showToast('Devi essere loggato per aggiungere ai preferiti', 'error');
       return;
     }
     // Implementa la logica per i preferiti
@@ -49,9 +50,11 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <User className="w-6 h-6 text-blue-600" />
-          </div>
+          <Avatar 
+            src={professionista.fotoProfilo} 
+            alt={`${professionista.nome} ${professionista.cognome}`} 
+            size="md"
+          />
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
               {professionista.nome} {professionista.cognome}

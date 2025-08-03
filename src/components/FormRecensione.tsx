@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Star, Send, X } from 'lucide-react';
 import type { FormRecensione, Professionista } from '@/types';
+import { useAppStore } from '@/store';
 
 interface FormRecensioneProps {
   professionista: Professionista;
@@ -16,17 +17,18 @@ export default function FormRecensione({ professionista, onClose, onSubmit }: Fo
   const [commento, setCommento] = useState('');
   const [servizioRecensito, setServizioRecensito] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showToast } = useAppStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (rating === 0) {
-      alert('Seleziona un rating');
+      showToast('Seleziona un rating', 'error');
       return;
     }
 
     if (commento.trim().length < 10) {
-      alert('Il commento deve essere di almeno 10 caratteri');
+      showToast('Il commento deve essere di almeno 10 caratteri', 'error');
       return;
     }
 
@@ -44,7 +46,7 @@ export default function FormRecensione({ professionista, onClose, onSubmit }: Fo
       onClose();
     } catch (error) {
       console.error('Errore durante l\'invio della recensione:', error);
-      alert('Errore durante l\'invio della recensione');
+      showToast('Errore durante l\'invio della recensione', 'error');
     } finally {
       setIsSubmitting(false);
     }
