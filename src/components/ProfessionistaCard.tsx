@@ -88,14 +88,16 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
             <p className="text-sm text-gray-600">{professionista.categoriaServizio}</p>
           </div>
         </div>
-        <button
-          onClick={handleFavorite}
-          className={`p-2 rounded-full transition-colors ${
-            isFavorite ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-          }`}
-        >
-          <Heart className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} />
-        </button>
+        {isAuthenticated ? (
+          <button
+            onClick={handleFavorite}
+            className={`p-2 rounded-full transition-colors ${
+              isFavorite ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
+            }`}
+          >
+            <Heart className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} />
+          </button>
+        ) : null}
       </div>
 
       {/* Rating */}
