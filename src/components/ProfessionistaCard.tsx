@@ -13,7 +13,7 @@ interface ProfessionistaCardProps {
 }
 
 export default function ProfessionistaCard({ professionista }: ProfessionistaCardProps) {
-  const { utente, isAuthenticated, addReview, showToast } = useAppStore();
+  const { utente, isAuthenticated, addReview, showToast, addFavorite, removeFavorite } = useAppStore();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
 
@@ -35,12 +35,22 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
     setShowReviewForm(true);
   };
 
-  const handleFavorite = () => {
+  const handleFavorite = async () => {
     if (!isAuthenticated) {
       showToast('Devi essere loggato per aggiungere ai preferiti', 'error');
       return;
     }
-    // Implementa la logica per i preferiti
+    try {
+      if (isFavorite) {
+        await removeFavorite(professionista.id);
+        showToast('Professionista rimosso dai preferiti', 'success');
+      } else {
+        await addFavorite(professionista.id);
+        showToast('Professionista aggiunto ai preferiti', 'success');
+      }
+    } catch (error) {
+      showToast('Errore durante la gestione dei preferiti', 'error');
+    }
   };
 
   const isFavorite = utente?.professionistiPreferiti?.includes(professionista.id) || false;
