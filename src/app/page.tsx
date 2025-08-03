@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { Users } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { useAppStore } from '@/store';

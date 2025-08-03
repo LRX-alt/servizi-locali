@@ -6,10 +6,8 @@ import { useAppStore } from '@/store';
 export default function SearchBar() {
   const {
     filtroRicerca,
-    filtroZona,
     filtroRating,
     setFiltroRicerca,
-    setFiltroZona,
     setFiltroRating,
     resetFiltri
   } = useAppStore();

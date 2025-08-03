@@ -630,12 +630,13 @@ export const useAppStore = create<AppState>()(
         lastUpdate: Date.now() // Per gestire la scadenza della cache
       }),
       version: 2, // Incrementato per forzare la migrazione
-      migrate: (persistedState: any, version: number) => {
+      migrate: (persistedState: unknown, version: number) => {
+        const state = persistedState as Record<string, unknown>;
         switch (version) {
           case 0:
             // Migrazione dalla versione 0 alla 1
             return {
-              ...persistedState,
+              ...state,
               professionisti: [],
               professionistiFiltrati: [],
               lastUpdate: null
@@ -643,11 +644,11 @@ export const useAppStore = create<AppState>()(
           case 1:
             // Migrazione dalla versione 1 alla 2
             return {
-              ...persistedState,
+              ...state,
               toasts: []
             };
           default:
-            return persistedState;
+            return state;
         }
       }
     }

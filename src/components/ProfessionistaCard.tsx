@@ -23,7 +23,7 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
       telLink.href = `tel:${professionista.telefono}`;
       telLink.click();
       showToast('Apertura app telefono...', 'info');
-    } catch (error) {
+    } catch {
       showToast('Impossibile aprire l\'app telefono', 'error');
     }
   };
@@ -38,7 +38,7 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
       whatsappLink.rel = 'noopener noreferrer';
       whatsappLink.click();
       showToast('Apertura WhatsApp...', 'info');
-    } catch (error) {
+    } catch {
       showToast('Impossibile aprire WhatsApp', 'error');
     }
   };
@@ -64,7 +64,7 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
         await addFavorite(professionista.id);
         showToast('Professionista aggiunto ai preferiti', 'success');
       }
-    } catch (error) {
+    } catch {
       showToast('Errore durante la gestione dei preferiti', 'error');
     }
   };
