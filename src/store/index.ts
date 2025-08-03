@@ -312,8 +312,15 @@ export const useAppStore = create<AppState>()(
             const profile = await authHelpers.getUserProfile(user.id);
             
             if (profile) {
+              // Carichiamo i preferiti dell'utente
+              const preferiti = await preferitiHelpers.getUserFavorites(user.id);
+              const utenteConvertito = convertSupabaseUtente(profile);
+              
               set({ 
-                utente: convertSupabaseUtente(profile), 
+                utente: {
+                  ...utenteConvertito,
+                  professionistiPreferiti: preferiti
+                },
                 professionistaLoggato: null,
                 userType: 'utente',
                 isAuthenticated: true, 
@@ -348,8 +355,15 @@ export const useAppStore = create<AppState>()(
             const profile = await authHelpers.getUserProfile(user.id);
             
             if (profile) {
+              // Carichiamo i preferiti dell'utente (saranno vuoti per un nuovo utente)
+              const preferiti = await preferitiHelpers.getUserFavorites(user.id);
+              const utenteConvertito = convertSupabaseUtente(profile);
+              
               set({ 
-                utente: convertSupabaseUtente(profile), 
+                utente: {
+                  ...utenteConvertito,
+                  professionistiPreferiti: preferiti
+                },
                 professionistaLoggato: null,
                 userType: 'utente',
                 isAuthenticated: true, 
@@ -509,6 +523,14 @@ export const useAppStore = create<AppState>()(
         if (utente) {
           try {
             await preferitiHelpers.addToFavorites(utente.id, professionistaId);
+            // Aggiorniamo la lista dei preferiti
+            const preferiti = await preferitiHelpers.getUserFavorites(utente.id);
+            set(state => ({
+              utente: state.utente ? {
+                ...state.utente,
+                professionistiPreferiti: preferiti
+              } : null
+            }));
           } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'aggiunta ai preferiti';
             set({ error: errorMessage });
@@ -521,6 +543,14 @@ export const useAppStore = create<AppState>()(
         if (utente) {
           try {
             await preferitiHelpers.removeFromFavorites(utente.id, professionistaId);
+            // Aggiorniamo la lista dei preferiti
+            const preferiti = await preferitiHelpers.getUserFavorites(utente.id);
+            set(state => ({
+              utente: state.utente ? {
+                ...state.utente,
+                professionistiPreferiti: preferiti
+              } : null
+            }));
           } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : 'Errore durante la rimozione dai preferiti';
             set({ error: errorMessage });
