@@ -1,366 +1,236 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  User, 
-  Star, 
-  MessageSquare, 
-  Phone, 
-  MapPin, 
-  Edit, 
-  LogOut,
-  Heart,
-  Calendar,
-  Settings,
-  Shield
-} from 'lucide-react';
-import { Utente, ProfiloUtente } from '@/types';
+import { useAppStore } from '@/store';
+import { Edit3, Settings, LogOut, Star, Heart, Calendar } from 'lucide-react';
 
 export default function ProfiloPage() {
+  const { utente, logout } = useAppStore();
   const [isEditing, setIsEditing] = useState(false);
-  const [utente] = useState<Utente>({
-    id: 'user-1',
-    nome: 'Mario',
-    cognome: 'Bianchi',
-    email: 'mario.bianchi@email.com',
-    telefono: '+39 333 1234567',
-    indirizzo: 'Via Roma, 15',
-    comune: 'Nereto',
-    preferenze: ['idraulico', 'elettricista'],
-    recensioniScritte: [
-      {
-        id: 'rec-1',
-        professionistaId: '1',
-        utenteId: 'user-1',
-        utenteNome: 'Mario Bianchi',
-        rating: 5,
-        commento: 'Ottimo lavoro! Molto professionale.',
-        data: new Date('2024-01-15'),
-        stato: 'approvata',
-        servizioRecensito: 'Riparazione perdite'
-      }
-    ],
-    professionistiPreferiti: ['1', '2'],
-    dataRegistrazione: new Date('2024-01-01'),
-    ultimoAccesso: new Date('2024-01-15')
+  const [editedProfile, setEditedProfile] = useState({
+    nome: utente?.nome || '',
+    cognome: utente?.cognome || '',
+    email: utente?.email || '',
+    telefono: utente?.telefono || '',
+    comune: utente?.comune || '',
   });
 
-  const [profilo, setProfilo] = useState<ProfiloUtente>({
-    nome: utente.nome,
-    cognome: utente.cognome,
-    email: utente.email,
-    telefono: utente.telefono,
-    indirizzo: utente.indirizzo,
-    comune: utente.comune,
-    preferenze: utente.preferenze
-  });
+  if (!utente) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600">Devi essere loggato per vedere il tuo profilo</p>
+      </div>
+    );
+  }
 
   const handleSave = () => {
-    // Simula il salvataggio
-    console.log('Profilo salvato:', profilo);
+    // Implementa il salvataggio del profilo
     setIsEditing(false);
-    alert('Profilo aggiornato con successo!');
   };
 
   const handleLogout = () => {
-    // Simula il logout
-    alert('Logout effettuato');
+    logout();
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${
-          i < Math.floor(rating) 
-            ? 'text-yellow-400 fill-current' 
-            : i < rating 
-              ? 'text-yellow-400 fill-current opacity-50' 
-              : 'text-gray-300'
-        }`}
-      />
-    ));
-  };
+  const daysRegistered = Math.floor((Date.now() - utente.dataRegistrazione.getTime()) / (1000 * 60 * 60 * 24));
 
-  const renderProfileInfo = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm border">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Informazioni personali</h3>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-        >
-          <Edit className="w-4 h-4" />
-          <span>{isEditing ? 'Annulla' : 'Modifica'}</span>
-        </button>
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold text-gray-900">Il Mio Profilo</h1>
+        <p className="text-xl text-gray-600">
+          Gestisci le tue informazioni personali e le tue attività
+        </p>
       </div>
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Nome
-            </label>
-            <input
-              type="text"
-              value={profilo.nome}
-              onChange={(e) => setProfilo(prev => ({ ...prev, nome: e.target.value }))}
-              disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 disabled:bg-gray-50 disabled:text-gray-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Cognome
-            </label>
-            <input
-              type="text"
-              value={profilo.cognome}
-              onChange={(e) => setProfilo(prev => ({ ...prev, cognome: e.target.value }))}
-              disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 disabled:bg-gray-50 disabled:text-gray-500"
-            />
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Informazioni Personali */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">Informazioni Personali</h2>
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="flex items-center space-x-1 text-blue-600 hover:text-blue-800"
+              >
+                <Edit3 className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {isEditing ? 'Annulla' : 'Modifica'}
+                </span>
+              </button>
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            Email
-          </label>
-          <input
-            type="email"
-            value={profilo.email}
-            onChange={(e) => setProfilo(prev => ({ ...prev, email: e.target.value }))}
-            disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 disabled:bg-gray-50 disabled:text-gray-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Telefono
-            </label>
-            <input
-              type="tel"
-              value={profilo.telefono || ''}
-              onChange={(e) => setProfilo(prev => ({ ...prev, telefono: e.target.value }))}
-              disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 disabled:bg-gray-50 disabled:text-gray-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Comune
-            </label>
-            <input
-              type="text"
-              value={profilo.comune || ''}
-              onChange={(e) => setProfilo(prev => ({ ...prev, comune: e.target.value }))}
-              disabled={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 disabled:bg-gray-50 disabled:text-gray-500"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            Indirizzo
-          </label>
-          <input
-            type="text"
-            value={profilo.indirizzo || ''}
-            onChange={(e) => setProfilo(prev => ({ ...prev, indirizzo: e.target.value }))}
-            disabled={!isEditing}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 disabled:bg-gray-50 disabled:text-gray-500"
-          />
-        </div>
-
-        {isEditing && (
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              onClick={() => setIsEditing(false)}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Annulla
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Salva modifiche
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderStats = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{utente.recensioniScritte.length}</p>
-            <p className="text-sm text-gray-600">Recensioni scritte</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-            <Heart className="w-5 h-5 text-green-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{utente.professionistiPreferiti.length}</p>
-            <p className="text-sm text-gray-600">Professionisti preferiti</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-            <Calendar className="w-5 h-5 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-900">
-              {Math.floor((new Date().getTime() - utente.dataRegistrazione.getTime()) / (1000 * 60 * 60 * 24))}
-            </p>
-            <p className="text-sm text-gray-600">Giorni registrato</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderReviews = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm border">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Le tue recensioni</h3>
-      {utente.recensioniScritte.length === 0 ? (
-        <div className="text-center py-8">
-          <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600">Non hai ancora scritto recensioni</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {utente.recensioniScritte.map((recensione) => (
-            <div
-              key={recensione.id}
-              className="border border-gray-200 rounded-lg p-4"
-            >
-              <div className="flex items-start justify-between mb-2">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="font-medium text-gray-900">Servizio recensito</p>
-                  <p className="text-sm text-gray-600">
-                    {new Date(recensione.data).toLocaleDateString('it-IT')}
-                  </p>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProfile.nome}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, nome: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-gray-900">{utente.nome}</p>
+                  )}
                 </div>
-                <div className="flex items-center space-x-1">
-                  {renderStars(recensione.rating)}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cognome
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProfile.cognome}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, cognome: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-gray-900">{utente.cognome}</p>
+                  )}
                 </div>
               </div>
-              <p className="text-gray-700">{recensione.commento}</p>
-              {recensione.servizioRecensito && (
-                <div className="mt-2">
-                  <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                    {recensione.servizioRecensito}
-                  </span>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <p className="text-gray-900">{utente.email}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Telefono
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="tel"
+                      value={editedProfile.telefono}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, telefono: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-gray-900">{utente.telefono || 'Non specificato'}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Comune
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProfile.comune}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, comune: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-gray-900">{utente.comune || 'Non specificato'}</p>
+                  )}
+                </div>
+              </div>
+
+              {isEditing && (
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Salva Modifiche
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  >
+                    Annulla
+                  </button>
                 </div>
               )}
             </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+          </div>
 
-  const renderSettings = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm border">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Impostazioni</h3>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-          <div className="flex items-center space-x-3">
-            <Shield className="w-5 h-5 text-gray-600" />
-            <div>
-              <p className="font-medium text-gray-900">Privacy</p>
-              <p className="text-sm text-gray-600">Gestisci le impostazioni privacy</p>
+          {/* Statistiche */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Le Mie Statistiche</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Star className="w-6 h-6 text-blue-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{utente.recensioniScritte.length}</p>
+                <p className="text-sm text-gray-600">Recensioni Scritte</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Heart className="w-6 h-6 text-red-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{utente.professionistiPreferiti.length}</p>
+                <p className="text-sm text-gray-600">Professionisti Preferiti</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Calendar className="w-6 h-6 text-green-600" />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{daysRegistered}</p>
+                <p className="text-sm text-gray-600">Giorni Registrato</p>
+              </div>
             </div>
           </div>
-          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-            Modifica
-          </button>
         </div>
 
-        <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-          <div className="flex items-center space-x-3">
-            <Settings className="w-5 h-5 text-gray-600" />
-            <div>
-              <p className="font-medium text-gray-900">Notifiche</p>
-              <p className="text-sm text-gray-600">Gestisci le notifiche</p>
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Impostazioni */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Impostazioni</h3>
+            <div className="space-y-3">
+              <button className="flex items-center space-x-2 w-full text-left p-2 rounded-md hover:bg-gray-50">
+                <Settings className="w-4 h-4 text-gray-600" />
+                <span className="text-sm text-gray-700">Privacy</span>
+              </button>
+              <button className="flex items-center space-x-2 w-full text-left p-2 rounded-md hover:bg-gray-50">
+                <Settings className="w-4 h-4 text-gray-600" />
+                <span className="text-sm text-gray-700">Notifiche</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 w-full text-left p-2 rounded-md hover:bg-red-50 text-red-600"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm">Logout</span>
+              </button>
             </div>
           </div>
-          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-            Modifica
-          </button>
-        </div>
 
-        <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
-          <div className="flex items-center space-x-3">
-            <LogOut className="w-5 h-5 text-red-600" />
-            <div>
-              <p className="font-medium text-red-900">Logout</p>
-              <p className="text-sm text-red-600">Esci dal tuo account</p>
+          {/* Recensioni Recenti */}
+          {utente.recensioniScritte.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recensioni Recenti</h3>
+              <div className="space-y-3">
+                {utente.recensioniScritte.slice(0, 3).map((recensione) => (
+                  <div key={recensione.id} className="border-l-4 border-blue-500 pl-3">
+                    <div className="flex items-center space-x-1 mb-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${
+                            i < recensione.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600 line-clamp-2">{recensione.commento}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="text-red-600 hover:text-red-800 text-sm font-medium"
-          >
-            Logout
-          </button>
+          )}
         </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Il tuo profilo</h1>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">Benvenuto,</span>
-          <span className="font-medium text-gray-900">{utente.nome}</span>
-        </div>
-      </div>
-
-      {/* Statistiche */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Panoramica</h2>
-        {renderStats()}
-      </div>
-
-      {/* Informazioni profilo */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Profilo</h2>
-        {renderProfileInfo()}
-      </div>
-
-      {/* Recensioni */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Attività</h2>
-        {renderReviews()}
-      </div>
-
-      {/* Impostazioni */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-900">Impostazioni</h2>
-        {renderSettings()}
       </div>
     </div>
   );
