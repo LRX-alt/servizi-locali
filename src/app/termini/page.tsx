@@ -28,7 +28,7 @@ export default function TerminiPage() {
             1. Accettazione dei Termini
           </h2>
           <p className="text-gray-700 leading-relaxed">
-            Utilizzando Servizi Locali ("il Servizio"), accetti di essere vincolato da questi Termini di Servizio. 
+            Utilizzando Servizi Locali (&quot;il Servizio&quot;), accetti di essere vincolato da questi Termini di Servizio. 
             Se non accetti questi termini, non utilizzare il Servizio.
           </p>
         </section>

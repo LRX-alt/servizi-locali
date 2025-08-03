@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+
 import { Shield, Database, Eye, Mail, Phone } from 'lucide-react';
 
 export default function PrivacyPage() {

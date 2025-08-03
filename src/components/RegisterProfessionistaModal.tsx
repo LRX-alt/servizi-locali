@@ -70,7 +70,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
     try {
       await onRegister(formData);
       onClose();
-    } catch (err) {
+    } catch {
       setError('Errore durante la registrazione');
     }
   };
