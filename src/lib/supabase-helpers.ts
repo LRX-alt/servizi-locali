@@ -299,17 +299,56 @@ export const recensioniHelpers = {
 export const preferitiHelpers = {
   // Add to favorites
   async addToFavorites(userId: string, professionistaId: string) {
-    const { data, error } = await supabase
-      .from('preferiti')
-      .insert({
-        utente_id: userId,
-        professionista_id: professionistaId,
-      })
-      .select()
-      .single();
+    try {
+      // Prima verifichiamo se il preferito esiste già
+      const { data: existingFavorite } = await supabase
+        .from('preferiti')
+        .select('id')
+        .eq('utente_id', userId)
+        .eq('professionista_id', professionistaId)
+        .single();
 
-    if (error) throw error;
-    return data;
+      // Se esiste già, non facciamo nulla
+      if (existingFavorite) {
+        return existingFavorite;
+      }
+
+      // Se non esiste, lo aggiungiamo
+      const { data, error } = await supabase
+        .from('preferiti')
+        .insert({
+          utente_id: userId,
+          professionista_id: professionistaId,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          // Se nel frattempo è stato aggiunto (race condition), va bene così
+          return { id: 'exists' };
+        }
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('No rows returned')) {
+        // Se non troviamo il record, procediamo con l'inserimento
+        const { data, error: insertError } = await supabase
+          .from('preferiti')
+          .insert({
+            utente_id: userId,
+            professionista_id: professionistaId,
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        return data;
+      }
+      throw error;
+    }
   },
 
   // Remove from favorites
