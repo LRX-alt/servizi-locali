@@ -1,36 +1,175 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Servizi Locali
 
-## Getting Started
+Un'applicazione web per trovare professionisti e servizi pubblici nella tua zona. Connessioni dirette con idraulici, elettricisti, giardinieri e altri professionisti locali.
 
-First, run the development server:
+## 🚀 Funzionalità
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Per gli Utenti
+- **Ricerca Professionisti**: Trova professionisti per categoria (idraulico, elettricista, giardiniere, etc.)
+- **Filtri Avanzati**: Filtra per zona, rating, specializzazioni
+- **Contatti Diretti**: Chiama direttamente i professionisti
+- **Servizi Pubblici**: Informazioni su uffici, farmacie, banche
+- **Navigazione**: Apri l'app di navigazione per raggiungere i servizi
+- **Recensioni**: Visualizza rating e recensioni dei professionisti
+
+### Per i Professionisti
+- **Profilo Completo**: Foto, descrizione, specializzazioni
+- **Servizi e Prezzi**: Lista servizi con prezzi indicativi
+- **Orari Disponibili**: Informazioni su disponibilità
+- **Zona di Servizio**: Area geografica di competenza
+
+## 🛠️ Tecnologie Utilizzate
+
+- **Frontend**: Next.js 14, React, TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: Zustand
+- **Icons**: Lucide React
+- **Deployment**: Vercel (free tier)
+
+## 📁 Struttura del Progetto
+
+```
+src/
+├── app/                    # App Router di Next.js
+│   ├── page.tsx           # Homepage
+│   ├── servizi-pubblici/  # Pagina servizi pubblici
+│   └── mappa/             # Pagina mappa
+├── components/            # Componenti React
+│   ├── Header.tsx        # Header con navigazione
+│   ├── SearchBar.tsx     # Barra di ricerca
+│   ├── CategoryGrid.tsx  # Griglia categorie
+│   └── ProfessionistaCard.tsx # Card professionista
+├── store/                # State management
+│   └── index.ts          # Store Zustand
+├── types/                # TypeScript types
+│   └── index.ts          # Interfacce principali
+└── data/                 # Dati di esempio
+    └── mockData.ts       # Professionisti e servizi
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Come Avviare il Progetto
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clona il repository**
+   ```bash
+   git clone <repository-url>
+   cd servizi-locali
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Installa le dipendenze**
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. **Avvia il server di sviluppo**
+   ```bash
+   npm run dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Apri nel browser**
+   ```
+   http://localhost:3000
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📱 Funzionalità Principali
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Homepage
+- Ricerca professionisti con filtri
+- Griglia categorie cliccabili
+- Lista professionisti con rating
+- Contatti diretti via telefono
 
-## Deploy on Vercel
+### Servizi Pubblici
+- Lista uffici, farmacie, banche
+- Indirizzi cliccabili per navigazione
+- Numeri di telefono per chiamate dirette
+- Orari di apertura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Mappa (In Sviluppo)
+- Visualizzazione servizi pubblici
+- Marker interattivi
+- Navigazione integrata
+- Ricerca per indirizzo
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎨 Design System
+
+### Colori
+- **Primary**: Blue (#3B82F6)
+- **Success**: Green (#10B981)
+- **Warning**: Yellow (#F59E0B)
+- **Error**: Red (#EF4444)
+- **Gray**: Scale da 50 a 900
+
+### Componenti
+- Card con hover effects
+- Bottoni con stati interattivi
+- Form con validazione
+- Icone Lucide React
+
+## 📊 Dati di Esempio
+
+Il progetto include dati di esempio per:
+- **3 Professionisti**: Idraulico, Elettricista, Giardiniere
+- **5 Servizi Pubblici**: Comune, Poste, Farmacia, Banca, ASL
+- **6 Categorie**: Idraulico, Elettricista, Giardiniere, Imbianchino, Meccanico, Informatico
+
+## 🔧 Configurazione
+
+### Variabili d'Ambiente
+```env
+# Google Maps API (per mappa futura)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key
+
+# Database (per sviluppo futuro)
+DATABASE_URL=your_database_url
+```
+
+### Script Disponibili
+```bash
+npm run dev          # Server di sviluppo
+npm run build        # Build di produzione
+npm run start        # Server di produzione
+npm run lint         # Linting
+```
+
+## 🚀 Roadmap
+
+### Fase 1 (Completata) ✅
+- [x] Setup progetto Next.js
+- [x] Componenti base
+- [x] State management
+- [x] Homepage funzionale
+- [x] Pagina servizi pubblici
+
+### Fase 2 (In Sviluppo) 🔄
+- [ ] Integrazione Google Maps
+- [ ] Sistema autenticazione
+- [ ] Dashboard professionisti
+- [ ] Sistema recensioni
+
+### Fase 3 (Pianificata) 📋
+- [ ] Database MongoDB/Firebase
+- [ ] Sistema notifiche
+- [ ] App mobile (React Native)
+- [ ] Sistema pagamenti
+
+## 🤝 Contribuire
+
+1. Fork il progetto
+2. Crea un branch per la feature (`git checkout -b feature/AmazingFeature`)
+3. Commit le modifiche (`git commit -m 'Add some AmazingFeature'`)
+4. Push al branch (`git push origin feature/AmazingFeature`)
+5. Apri una Pull Request
+
+## 📄 Licenza
+
+Questo progetto è sotto licenza MIT. Vedi il file `LICENSE` per dettagli.
+
+## 📞 Contatti
+
+- **Email**: info@servizilocali.it
+- **Website**: https://servizilocali.it
+- **GitHub**: https://github.com/servizilocali
+
+---
+
+**Servizi Locali** - Connessioni dirette con professionisti locali 🏠
