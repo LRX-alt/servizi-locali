@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/store';
 import { serviziPubblici } from '@/data/mockData';
-import { MapPin, Phone, Clock, Navigation, Building2 } from 'lucide-react';
+import { MapPin, Phone, Clock, Navigation } from 'lucide-react';
 
 export default function ServiziPubbliciPage() {
   const { setServiziPubblici, serviziPubblici: servizi } = useAppStore();

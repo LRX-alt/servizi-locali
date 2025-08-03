@@ -12,7 +12,7 @@ interface ProfessionistaCardProps {
 }
 
 export default function ProfessionistaCard({ professionista }: ProfessionistaCardProps) {
-  const { utente, isAuthenticated, addReview, addFavorite, removeFavorite } = useAppStore();
+  const { utente, isAuthenticated, addReview } = useAppStore();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
 

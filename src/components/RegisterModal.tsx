@@ -8,7 +8,7 @@ interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToLogin: () => void;
-  onRegister: (userData: any) => void;
+  onRegister: (userData: { nome: string; cognome: string; email: string; password: string; telefono?: string; comune?: string; acceptTerms: boolean; acceptPrivacy: boolean; acceptMarketing: boolean; }) => void;
 }
 
 export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegister }: RegisterModalProps) {

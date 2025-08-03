@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Mail, Lock, User, Eye, EyeOff, Building2 } from 'lucide-react';
+import { X, Mail, Lock, Eye, EyeOff, Building2 } from 'lucide-react';
 import { LoginProfessionistaForm } from '@/types';
 
 interface LoginProfessionistaModalProps {

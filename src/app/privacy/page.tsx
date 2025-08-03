@@ -28,7 +28,7 @@ export default function PrivacyPage() {
             1. Introduzione
           </h2>
           <p className="text-gray-700 leading-relaxed">
-            Servizi Locali ("noi", "nostro", "ci") rispetta la tua privacy e si impegna a proteggere i tuoi dati personali. 
+            Servizi Locali (&quot;noi&quot;, &quot;nostro&quot;, &quot;ci&quot;) rispetta la tua privacy e si impegna a proteggere i tuoi dati personali. 
             Questa Privacy Policy spiega come raccogliamo, utilizziamo e proteggiamo le tue informazioni quando utilizzi il nostro servizio.
           </p>
         </section>
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
             
             <p><strong>Migliorare il Servizio:</strong></p>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>Analizzare l'utilizzo per ottimizzazioni</li>
+              <li>Analizzare l&apos;utilizzo per ottimizzazioni</li>
               <li>Sviluppare nuove funzionalità</li>
               <li>Risolvere problemi tecnici</li>
             </ul>
@@ -225,7 +225,7 @@ export default function PrivacyPage() {
               <div>
                 <h4 className="font-medium text-gray-900">Cookie Analitici</h4>
                 <p className="text-sm text-gray-600">
-                  Per analizzare l'utilizzo del servizio
+                  Per analizzare l&apos;utilizzo del servizio
                 </p>
               </div>
               <div>
@@ -255,7 +255,7 @@ export default function PrivacyPage() {
             </p>
             <p>
               Per esercitare i tuoi diritti o per domande sulla privacy, 
-              contattaci all'indirizzo email sopra indicato.
+              contattaci all&apos;indirizzo email sopra indicato.
             </p>
           </div>
         </section>

@@ -8,7 +8,7 @@ interface RegisterProfessionistaModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToLogin: () => void;
-  onRegister: (userData: any) => void;
+  onRegister: (userData: { nome: string; cognome: string; email: string; password: string; telefono: string; categoria_servizio: string; specializzazioni: string[]; zona_servizio: string; orari_disponibili: string; descrizione: string; partita_iva?: string; codice_fiscale?: string; acceptTerms: boolean; acceptPrivacy: boolean; acceptMarketing: boolean; }) => void;
 }
 
 export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchToLogin, onRegister }: RegisterProfessionistaModalProps) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 import Header from "@/components/Header";
 
@@ -50,19 +51,19 @@ export default function RootLayout({
                   <h3 className="text-sm font-semibold text-gray-900 mb-4">Link Rapidi</h3>
                   <ul className="space-y-2">
                     <li>
-                      <a href="/" className="text-sm text-gray-600 hover:text-gray-900">
+                      <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
                         Home
-                      </a>
+                      </Link>
                     </li>
                     <li>
-                      <a href="/servizi-pubblici" className="text-sm text-gray-600 hover:text-gray-900">
+                      <Link href="/servizi-pubblici" className="text-sm text-gray-600 hover:text-gray-900">
                         Servizi Pubblici
-                      </a>
+                      </Link>
                     </li>
                     <li>
-                      <a href="/mappa" className="text-sm text-gray-600 hover:text-gray-900">
+                      <Link href="/mappa" className="text-sm text-gray-600 hover:text-gray-900">
                         Mappa
-                      </a>
+                      </Link>
                     </li>
                   </ul>
                 </div>
@@ -72,19 +73,19 @@ export default function RootLayout({
                   <h3 className="text-sm font-semibold text-gray-900 mb-4">Legale</h3>
                   <ul className="space-y-2">
                     <li>
-                      <a href="/termini" className="text-sm text-gray-600 hover:text-gray-900">
+                      <Link href="/termini" className="text-sm text-gray-600 hover:text-gray-900">
                         Termini di Servizio
-                      </a>
+                      </Link>
                     </li>
                     <li>
-                      <a href="/privacy" className="text-sm text-gray-600 hover:text-gray-900">
+                      <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900">
                         Privacy Policy
-                      </a>
+                      </Link>
                     </li>
                     <li>
-                      <a href="mailto:privacy@servizilocali.it" className="text-sm text-gray-600 hover:text-gray-900">
+                      <Link href="mailto:privacy@servizilocali.it" className="text-sm text-gray-600 hover:text-gray-900">
                         Contatti
-                      </a>
+                      </Link>
                     </li>
                   </ul>
                 </div>

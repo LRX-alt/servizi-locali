@@ -164,7 +164,7 @@ export default function TerminiPage() {
               • Non siamo responsabili per dispute tra utenti e professionisti
             </p>
             <p>
-              • Il Servizio è fornito "così com'è" senza garanzie esplicite
+              • Il Servizio è fornito &quot;così com&apos;è&quot; senza garanzie esplicite
             </p>
           </div>
         </section>
@@ -177,7 +177,7 @@ export default function TerminiPage() {
           <p className="text-gray-700 leading-relaxed">
             Ci riserviamo il diritto di modificare questi termini in qualsiasi momento. 
             Le modifiche saranno comunicate tramite email o notifica sul sito. 
-            L'uso continuato del Servizio dopo le modifiche costituisce accettazione dei nuovi termini.
+            L&apos;uso continuato del Servizio dopo le modifiche costituisce accettazione dei nuovi termini.
           </p>
         </section>
 
@@ -194,7 +194,7 @@ export default function TerminiPage() {
               <strong>Indirizzo:</strong> [Inserisci indirizzo legale]
             </p>
             <p>
-              Per domande sui termini, contattaci all'indirizzo email sopra indicato.
+              Per domande sui termini, contattaci all&apos;indirizzo email sopra indicato.
             </p>
           </div>
         </section>
