@@ -17,30 +17,58 @@ export const authHelpers = {
     telefono?: string;
     comune?: string;
   }) {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: userData.email,
-      password: userData.password,
-    });
-
-    if (authError) throw authError;
-
-    if (authData.user) {
-      const { error: profileError } = await supabase
+    try {
+      // Prima verifichiamo se l'email esiste già
+      const { data: existingUser } = await supabase
         .from('utenti')
-        .insert({
-          id: authData.user.id,
-          nome: userData.nome,
-          cognome: userData.cognome,
-          email: userData.email,
-          telefono: userData.telefono,
-          comune: userData.comune,
-          preferenze: [],
-        });
+        .select('id')
+        .eq('email', userData.email)
+        .single();
 
-      if (profileError) throw profileError;
+      if (existingUser) {
+        throw new Error('Un account con questa email esiste già.');
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+      });
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          throw new Error('Un account con questa email esiste già.');
+        }
+        throw new Error('Errore durante la registrazione. Riprova più tardi.');
+      }
+
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('utenti')
+          .insert({
+            id: authData.user.id,
+            nome: userData.nome,
+            cognome: userData.cognome,
+            email: userData.email,
+            telefono: userData.telefono,
+            comune: userData.comune,
+            preferenze: [],
+          });
+
+        if (profileError) {
+          if (profileError.code === '23505') { // Unique constraint violation
+            throw new Error('Un account con questa email esiste già.');
+          }
+          throw new Error('Errore durante la creazione del profilo. Riprova più tardi.');
+        }
+      }
+
+      return authData;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Errore durante la registrazione. Riprova più tardi.');
     }
-
-    return authData;
   },
 
   // Login utente
@@ -50,7 +78,15 @@ export const authHelpers = {
       password,
     });
 
-    if (error) throw error;
+    if (error) {
+      if (error.message === 'Email not confirmed') {
+        throw new Error('Email non confermata. Controlla la tua casella email per il link di conferma.');
+      }
+      if (error.message === 'Invalid login credentials') {
+        throw new Error('Email o password non corretti.');
+      }
+      throw new Error('Errore durante il login. Riprova più tardi.');
+    }
     return data;
   },
 
@@ -134,37 +170,65 @@ export const professionistiHelpers = {
     partita_iva?: string;
     codice_fiscale?: string;
   }) {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: profData.email,
-      password: profData.password,
-    });
-
-    if (authError) throw authError;
-
-    if (authData.user) {
-      const { error: profileError } = await supabase
+    try {
+      // Prima verifichiamo se l'email esiste già
+      const { data: existingProf } = await supabase
         .from('professionisti')
-        .insert({
-          id: authData.user.id,
-          nome: profData.nome,
-          cognome: profData.cognome,
-          email: profData.email,
-          telefono: profData.telefono,
-          categoria_servizio: profData.categoria_servizio,
-          specializzazioni: profData.specializzazioni,
-          zona_servizio: profData.zona_servizio,
-          orari_disponibili: profData.orari_disponibili,
-          descrizione: profData.descrizione,
-          partita_iva: profData.partita_iva,
-          codice_fiscale: profData.codice_fiscale,
-          is_verified: false,
-          is_active: true,
-        });
+        .select('id')
+        .eq('email', profData.email)
+        .single();
 
-      if (profileError) throw profileError;
+      if (existingProf) {
+        throw new Error('Un account con questa email esiste già.');
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: profData.email,
+        password: profData.password,
+      });
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          throw new Error('Un account con questa email esiste già.');
+        }
+        throw new Error('Errore durante la registrazione. Riprova più tardi.');
+      }
+
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('professionisti')
+          .insert({
+            id: authData.user.id,
+            nome: profData.nome,
+            cognome: profData.cognome,
+            email: profData.email,
+            telefono: profData.telefono,
+            categoria_servizio: profData.categoria_servizio,
+            specializzazioni: profData.specializzazioni,
+            zona_servizio: profData.zona_servizio,
+            orari_disponibili: profData.orari_disponibili,
+            descrizione: profData.descrizione,
+            partita_iva: profData.partita_iva,
+            codice_fiscale: profData.codice_fiscale,
+            is_verified: false,
+            is_active: true,
+          });
+
+        if (profileError) {
+          if (profileError.code === '23505') { // Unique constraint violation
+            throw new Error('Un account con questa email esiste già.');
+          }
+          throw new Error('Errore durante la creazione del profilo. Riprova più tardi.');
+        }
+      }
+
+      return authData;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Errore durante la registrazione. Riprova più tardi.');
     }
-
-    return authData;
   },
 
   // Update professionista profile
