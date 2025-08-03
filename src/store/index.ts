@@ -195,12 +195,6 @@ export const useAppStore = create<AppState>()(
         
         let filtered = [...professionisti];
 
-        // Debug: log delle categorie disponibili
-        console.log('🔍 DEBUG FILTRI:');
-        console.log('Categoria selezionata:', categoriaSelezionata);
-        console.log('Professionisti totali:', professionisti.length);
-        console.log('Categorie professionisti:', [...new Set(professionisti.map(p => p.categoriaServizio))]);
-
         // Filtro per ricerca
         if (filtroRicerca) {
           const ricerca = filtroRicerca.toLowerCase();
@@ -224,16 +218,10 @@ export const useAppStore = create<AppState>()(
           filtered = filtered.filter(p => p.rating >= filtroRating);
         }
 
-        // Filtro per categoria - MIGLIORATO
+        // Filtro per categoria
         if (categoriaSelezionata) {
-          console.log('🔍 Filtro categoria attivo:', categoriaSelezionata);
-          
-          // Trova la categoria corrispondente
           const categoria = categorie.find(c => c.id === categoriaSelezionata);
           if (categoria) {
-            console.log('🔍 Nome categoria trovata:', categoria.nome);
-            
-            // Filtra per nome categoria (case-insensitive) e gestisce mappature
             filtered = filtered.filter(p => {
               const categoriaProf = p.categoriaServizio.toLowerCase();
               const categoriaNome = categoria.nome.toLowerCase();
@@ -243,14 +231,9 @@ export const useAppStore = create<AppState>()(
                      categoriaProf === categoriaId ||
                      categoriaProf === categoriaMapping[categoria.nome]?.toLowerCase();
             });
-            
-            console.log('🔍 Professionisti filtrati per categoria:', filtered.length);
-          } else {
-            console.log('❌ Categoria non trovata:', categoriaSelezionata);
           }
         }
 
-        console.log('🔍 Risultati finali:', filtered.length);
         set({ professionistiFiltrati: filtered });
       },
 

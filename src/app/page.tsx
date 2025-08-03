@@ -11,7 +11,6 @@ import ProfessionistaCard from '@/components/ProfessionistaCard';
 export default function HomePage() {
   const {
     professionistiFiltrati,
-    professionisti,
     isLoading,
     error,
     loadProfessionisti
@@ -63,18 +62,6 @@ export default function HomePage() {
           Connessioni dirette con idraulici, elettricisti, giardinieri e altri professionisti locali
         </p>
       </div>
-
-      {/* DEBUG TEMPORANEO - Rimuovere dopo il fix */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h3 className="font-semibold text-yellow-800 mb-2">🔍 DEBUG - Dati Professionisti:</h3>
-          <div className="text-sm text-yellow-700 space-y-1">
-            <p><strong>Totali:</strong> {professionisti.length}</p>
-            <p><strong>Filtrati:</strong> {professionistiFiltrati.length}</p>
-            <p><strong>Categorie disponibili:</strong> {[...new Set(professionisti.map(p => p.categoriaServizio))].join(', ')}</p>
-          </div>
-        </div>
-      )}
 
       {/* Barra di ricerca */}
       <SearchBar />
