@@ -18,13 +18,29 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
   const [showReviews, setShowReviews] = useState(false);
 
   const handleCall = () => {
-    window.open(`tel:${professionista.telefono}`, '_self');
+    try {
+      const telLink = document.createElement('a');
+      telLink.href = `tel:${professionista.telefono}`;
+      telLink.click();
+      showToast('Apertura app telefono...', 'info');
+    } catch (error) {
+      showToast('Impossibile aprire l\'app telefono', 'error');
+    }
   };
 
   const handleWhatsApp = () => {
-    const message = `Ciao ${professionista.nome}, sono interessato ai tuoi servizi. Potresti fornirmi maggiori informazioni?`;
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${professionista.telefono.replace(/\s/g, '')}?text=${encodedMessage}`, '_blank');
+    try {
+      const message = `Ciao ${professionista.nome}, sono interessato ai tuoi servizi. Potresti fornirmi maggiori informazioni?`;
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappLink = document.createElement('a');
+      whatsappLink.href = `https://wa.me/${professionista.telefono.replace(/\s/g, '')}?text=${encodedMessage}`;
+      whatsappLink.target = '_blank';
+      whatsappLink.rel = 'noopener noreferrer';
+      whatsappLink.click();
+      showToast('Apertura WhatsApp...', 'info');
+    } catch (error) {
+      showToast('Impossibile aprire WhatsApp', 'error');
+    }
   };
 
   const handleReview = () => {
