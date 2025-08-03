@@ -32,7 +32,9 @@ export default function ProfiloPage() {
     logout();
   };
 
-  const daysRegistered = Math.floor((Date.now() - utente.dataRegistrazione.getTime()) / (1000 * 60 * 60 * 24));
+  const daysRegistered = utente.dataRegistrazione ? 
+    Math.floor((Date.now() - utente.dataRegistrazione.getTime()) / (1000 * 60 * 60 * 24)) : 
+    0;
 
   return (
     <div className="space-y-8">
