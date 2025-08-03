@@ -37,7 +37,7 @@ export default function LoginProfessionistaModal({ isOpen, onClose, onLogin, onS
 
   const handleInputChange = (field: keyof LoginProfessionistaForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
-    if (error) setError('');
+    if (errorMessage) setError('');
   };
 
   if (!isOpen) return null;

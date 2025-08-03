@@ -37,7 +37,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
 
   const handleInputChange = (field: keyof LoginForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
-    if (error) setError('');
+    if (errorMessage) setError('');
   };
 
   if (!isOpen) return null;
