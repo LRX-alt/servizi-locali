@@ -1,433 +1,369 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Mail, Lock, User, Eye, EyeOff, Phone, MapPin, Building2, Briefcase, Clock, FileText } from 'lucide-react';
-import { RegisterProfessionistaForm } from '@/types';
-import { categorie } from '@/data/mockData';
+import { X, User, Mail, Lock, Phone, MapPin, Building2, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 interface RegisterProfessionistaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRegister: (form: RegisterProfessionistaForm) => Promise<void>;
   onSwitchToLogin: () => void;
+  onRegister: (userData: any) => void;
 }
 
-export default function RegisterProfessionistaModal({ isOpen, onClose, onRegister, onSwitchToLogin }: RegisterProfessionistaModalProps) {
-  const [form, setForm] = useState<RegisterProfessionistaForm>({
+export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchToLogin, onRegister }: RegisterProfessionistaModalProps) {
+  const [formData, setFormData] = useState({
     nome: '',
     cognome: '',
     email: '',
     password: '',
-    confermaPassword: '',
     telefono: '',
-    categoriaServizio: '',
-    specializzazioni: [],
-    zonaServizio: '',
-    orariDisponibili: '',
+    categoria_servizio: '',
+    specializzazioni: [] as string[],
+    zona_servizio: '',
+    orari_disponibili: '',
     descrizione: '',
-    partitaIva: '',
-    codiceFiscale: ''
+    partita_iva: '',
+    codice_fiscale: '',
+    acceptTerms: false,
+    acceptPrivacy: false,
+    acceptMarketing: false
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [error, setError] = useState('');
-  const [newSpecializzazione, setNewSpecializzazione] = useState('');
+
+  const categorieServizi = [
+    'Idraulico',
+    'Elettricista',
+    'Giardiniere',
+    'Pulizie',
+    'Traslochi',
+    'Ristrutturazioni',
+    'Informatica',
+    'Altro'
+  ];
+
+  const specializzazioni = [
+    'Riparazioni urgenti',
+    'Installazioni',
+    'Manutenzione',
+    'Progetti su misura',
+    'Consulenza',
+    'Preventivi gratuiti'
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (form.password !== form.confermaPassword) {
-      setError('Le password non coincidono');
+    // Validazione
+    if (!formData.nome || !formData.cognome || !formData.email || !formData.password || !formData.telefono || !formData.categoria_servizio) {
+      setError('Tutti i campi obbligatori devono essere compilati');
       return;
     }
 
-    if (form.password.length < 6) {
-      setError('La password deve essere di almeno 6 caratteri');
+    if (!formData.acceptTerms || !formData.acceptPrivacy) {
+      setError('Devi accettare i Termini di Servizio e la Privacy Policy');
       return;
     }
-
-    if (!form.categoriaServizio) {
-      setError('Seleziona una categoria di servizio');
-      return;
-    }
-
-    if (form.specializzazioni.length === 0) {
-      setError('Aggiungi almeno una specializzazione');
-      return;
-    }
-
-    setIsSubmitting(true);
 
     try {
-      await onRegister(form);
+      await onRegister(formData);
       onClose();
-    } catch (error) {
-      setError('Errore durante la registrazione. Riprova.');
-    } finally {
-      setIsSubmitting(false);
+    } catch (err) {
+      setError('Errore durante la registrazione');
     }
   };
 
-  const handleInputChange = (field: keyof RegisterProfessionistaForm, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-    if (error) setError('');
-  };
-
-  const handleAddSpecializzazione = () => {
-    if (newSpecializzazione.trim() && !form.specializzazioni.includes(newSpecializzazione.trim())) {
-      setForm(prev => ({
-        ...prev,
-        specializzazioni: [...prev.specializzazioni, newSpecializzazione.trim()]
-      }));
-      setNewSpecializzazione('');
-    }
-  };
-
-  const handleRemoveSpecializzazione = (spec: string) => {
-    setForm(prev => ({
+  const handleInputChange = (field: string, value: string | boolean | string[]) => {
+    setFormData(prev => ({
       ...prev,
-      specializzazioni: prev.specializzazioni.filter(s => s !== spec)
+      [field]: value
+    }));
+  };
+
+  const handleSpecializzazioneChange = (specializzazione: string) => {
+    setFormData(prev => ({
+      ...prev,
+      specializzazioni: prev.specializzazioni.includes(specializzazione)
+        ? prev.specializzazioni.filter(s => s !== specializzazione)
+        : [...prev.specializzazioni, specializzazione]
     }));
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Registrati come Professionista
-            </h2>
-          </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900">Registrazione Professionista</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
               {error}
             </div>
           )}
 
-          {/* Informazioni personali */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">Informazioni personali</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Nome *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={form.nome}
-                    onChange={(e) => handleInputChange('nome', e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                    placeholder="Il tuo nome"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Cognome *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={form.cognome}
-                    onChange={(e) => handleInputChange('cognome', e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                    placeholder="Il tuo cognome"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Email professionale *
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                    placeholder="La tua email professionale"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Telefono *
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="tel"
-                    value={form.telefono}
-                    onChange={(e) => handleInputChange('telefono', e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                    placeholder="Il tuo telefono"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Informazioni professionali */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">Informazioni professionali</h3>
-            
+          {/* Informazioni Personali */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Categoria di servizio *
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nome *
               </label>
               <div className="relative">
-                <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <select
-                  value={form.categoriaServizio}
-                  onChange={(e) => handleInputChange('categoriaServizio', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  required
-                >
-                  <option value="">Seleziona categoria</option>
-                  {categorie.map((categoria) => (
-                    <option key={categoria.id} value={categoria.nome}>
-                      {categoria.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Specializzazioni *
-              </label>
-              <div className="space-y-2">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={newSpecializzazione}
-                    onChange={(e) => setNewSpecializzazione(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                    placeholder="Aggiungi specializzazione"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSpecializzazione())}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddSpecializzazione}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Aggiungi
-                  </button>
-                </div>
-                {form.specializzazioni.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {form.specializzazioni.map((spec, index) => (
-                      <span
-                        key={index}
-                        className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
-                      >
-                        <span>{spec}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSpecializzazione(spec)}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Zona di servizio *
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={form.zonaServizio}
-                    onChange={(e) => handleInputChange('zonaServizio', e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                    placeholder="Es: Nereto, Corropoli..."
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Orari disponibili *
-                </label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    value={form.orariDisponibili}
-                    onChange={(e) => handleInputChange('orariDisponibili', e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                    placeholder="Es: Lun-Ven 8-18, Sab 8-12"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Descrizione del servizio *
-              </label>
-              <div className="relative">
-                <FileText className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-                <textarea
-                  value={form.descrizione}
-                  onChange={(e) => handleInputChange('descrizione', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                  placeholder="Descrivi i tuoi servizi e la tua esperienza..."
-                  rows={4}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Partita IVA
-                </label>
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  value={form.partitaIva}
-                  onChange={(e) => handleInputChange('partitaIva', e.target.value)}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                  placeholder="Partita IVA (opzionale)"
+                  value={formData.nome}
+                  onChange={(e) => handleInputChange('nome', e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Nome"
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cognome *
+              </label>
+              <input
+                type="text"
+                value={formData.cognome}
+                onChange={(e) => handleInputChange('cognome', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Cognome"
+              />
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Codice Fiscale
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="email@esempio.com"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password *
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Password"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Telefono *
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="tel"
+                value={formData.telefono}
+                onChange={(e) => handleInputChange('telefono', e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="+39 123 456 7890"
+              />
+            </div>
+          </div>
+
+          {/* Informazioni Professionali */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Categoria Servizio *
+            </label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <select
+                value={formData.categoria_servizio}
+                onChange={(e) => handleInputChange('categoria_servizio', e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Seleziona categoria</option>
+                {categorieServizi.map(categoria => (
+                  <option key={categoria} value={categoria}>{categoria}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Specializzazioni
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {specializzazioni.map(spec => (
+                <label key={spec} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.specializzazioni.includes(spec)}
+                    onChange={() => handleSpecializzazioneChange(spec)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">{spec}</span>
                 </label>
-                <input
-                  type="text"
-                  value={form.codiceFiscale}
-                  onChange={(e) => handleInputChange('codiceFiscale', e.target.value)}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                  placeholder="Codice Fiscale (opzionale)"
-                />
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Password */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">Sicurezza</h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Password *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={form.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                  placeholder="Minimo 6 caratteri"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Conferma Password *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={form.confermaPassword}
-                  onChange={(e) => handleInputChange('confermaPassword', e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                  placeholder="Conferma la password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Zona di Servizio *
+            </label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                value={formData.zona_servizio}
+                onChange={(e) => handleInputChange('zona_servizio', e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="es. Nereto, Teramo, Provincia di Teramo"
+              />
             </div>
           </div>
 
-          <div className="flex items-center">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Orari Disponibili
+            </label>
             <input
-              type="checkbox"
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              required
+              type="text"
+              value={formData.orari_disponibili}
+              onChange={(e) => handleInputChange('orari_disponibili', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="es. Lun-Ven 8:00-18:00, Sab 8:00-12:00"
             />
-            <span className="ml-2 text-sm text-gray-600">
-              Accetto i{' '}
-              <button type="button" className="text-blue-600 hover:text-blue-800">
-                termini e condizioni
-              </button>
-              {' '}e confermo di essere un professionista qualificato
-            </span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Descrizione
+            </label>
+            <textarea
+              value={formData.descrizione}
+              onChange={(e) => handleInputChange('descrizione', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Descrivi i tuoi servizi, esperienza, specializzazioni..."
+            />
+          </div>
+
+          {/* Informazioni Fiscali */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Partita IVA
+              </label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  value={formData.partita_iva}
+                  onChange={(e) => handleInputChange('partita_iva', e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="IT12345678901"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Codice Fiscale
+              </label>
+              <input
+                type="text"
+                value={formData.codice_fiscale}
+                onChange={(e) => handleInputChange('codice_fiscale', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="RSSMRA80A01H501U"
+              />
+            </div>
+          </div>
+
+          {/* Checkbox per termini e privacy */}
+          <div className="space-y-3 pt-4">
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                id="acceptTerms"
+                checked={formData.acceptTerms}
+                onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="acceptTerms" className="text-sm text-gray-700">
+                Accetto i{' '}
+                <Link href="/termini" className="text-blue-600 hover:text-blue-800 underline" target="_blank">
+                  Termini di Servizio
+                </Link>
+                {' '}*
+              </label>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                id="acceptPrivacy"
+                checked={formData.acceptPrivacy}
+                onChange={(e) => handleInputChange('acceptPrivacy', e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="acceptPrivacy" className="text-sm text-gray-700">
+                Accetto la{' '}
+                <Link href="/privacy" className="text-blue-600 hover:text-blue-800 underline" target="_blank">
+                  Privacy Policy
+                </Link>
+                {' '}*
+              </label>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                id="acceptMarketing"
+                checked={formData.acceptMarketing}
+                onChange={(e) => handleInputChange('acceptMarketing', e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="acceptMarketing" className="text-sm text-gray-700">
+                Accetto di ricevere comunicazioni marketing (opzionale)
+              </label>
+            </div>
           </div>
 
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
           >
-            {isSubmitting ? 'Registrazione in corso...' : 'Registrati come Professionista'}
+            Registrati come Professionista
           </button>
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Hai già un account professionale?{' '}
+              Hai già un account?{' '}
               <button
                 type="button"
                 onClick={onSwitchToLogin}
