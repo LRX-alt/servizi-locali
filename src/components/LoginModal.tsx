@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { LoginForm } from '@/types';
 
 interface LoginModalProps {

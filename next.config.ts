@@ -1,14 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    // Disabilita ESLint durante il build di produzione
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    // Disabilita type checking durante il build se necessario
-    ignoreBuildErrors: true,
-  },
+  // Configurazione pulita per produzione
+  poweredByHeader: false,
+  compress: true,
 };
 
 export default nextConfig;

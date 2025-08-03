@@ -225,24 +225,56 @@ export default function Header() {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         onSwitchToRegister={() => handleSwitchToRegister('user')}
+        onLogin={async (form) => {
+          try {
+            await useAppStore.getState().login(form);
+            setShowLoginModal(false);
+          } catch (error) {
+            console.error('Login failed:', error);
+          }
+        }}
       />
 
       <RegisterModal
         isOpen={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
         onSwitchToLogin={() => handleSwitchToLogin('user')}
+        onRegister={async (form) => {
+          try {
+            await useAppStore.getState().register(form);
+            setShowRegisterModal(false);
+          } catch (error) {
+            console.error('Registration failed:', error);
+          }
+        }}
       />
 
       <LoginProfessionistaModal
         isOpen={showLoginProfessionistaModal}
         onClose={() => setShowLoginProfessionistaModal(false)}
         onSwitchToRegister={() => handleSwitchToRegister('professionista')}
+        onLogin={async (form) => {
+          try {
+            await useAppStore.getState().loginProfessionista(form);
+            setShowLoginProfessionistaModal(false);
+          } catch (error) {
+            console.error('Login professionista failed:', error);
+          }
+        }}
       />
 
       <RegisterProfessionistaModal
         isOpen={showRegisterProfessionistaModal}
         onClose={() => setShowRegisterProfessionistaModal(false)}
         onSwitchToLogin={() => handleSwitchToLogin('professionista')}
+        onRegister={async (form) => {
+          try {
+            await useAppStore.getState().registerProfessionista(form);
+            setShowRegisterProfessionistaModal(false);
+          } catch (error) {
+            console.error('Registration professionista failed:', error);
+          }
+        }}
       />
     </>
   );

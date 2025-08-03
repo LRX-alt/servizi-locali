@@ -1,8 +1,7 @@
 'use client';
 
-import { Search, Filter, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useAppStore } from '@/store';
-import { useEffect } from 'react';
 
 export default function SearchBar() {
   const {

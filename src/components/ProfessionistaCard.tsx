@@ -164,7 +164,20 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
           professionista={professionista}
           onClose={() => setShowReviewForm(false)}
           onSubmit={(review) => {
-            addReview(review);
+            if (utente) {
+              const fullReview = {
+                id: Date.now().toString(),
+                professionistaId: review.professionistaId,
+                utenteId: utente.id,
+                utenteNome: `${utente.nome} ${utente.cognome}`,
+                rating: review.rating,
+                commento: review.commento,
+                data: new Date(),
+                stato: 'pending' as const,
+                servizioRecensito: review.servizioRecensito,
+              };
+              addReview(fullReview);
+            }
             setShowReviewForm(false);
           }}
         />
