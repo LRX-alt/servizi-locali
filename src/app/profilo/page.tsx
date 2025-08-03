@@ -32,9 +32,18 @@ export default function ProfiloPage() {
     logout();
   };
 
-  const daysRegistered = utente.dataRegistrazione ? 
-    Math.floor((Date.now() - utente.dataRegistrazione.getTime()) / (1000 * 60 * 60 * 24)) : 
-    0;
+  const calculateDaysRegistered = () => {
+    try {
+      if (!utente.dataRegistrazione) return 0;
+      const registrationDate = new Date(utente.dataRegistrazione);
+      return Math.floor((Date.now() - registrationDate.getTime()) / (1000 * 60 * 60 * 24));
+    } catch (error) {
+      console.error('Errore nel calcolo dei giorni di registrazione:', error);
+      return 0;
+    }
+  };
+
+  const daysRegistered = calculateDaysRegistered();
 
   return (
     <div className="space-y-8">

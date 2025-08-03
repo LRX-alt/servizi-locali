@@ -77,7 +77,7 @@ export interface Utente {
   preferenze?: string[];
   recensioniScritte: Recensione[];
   professionistiPreferiti: string[];
-  dataRegistrazione: Date;
+  dataRegistrazione: string;
   ultimoAccesso?: Date;
   avatar?: string;
 }

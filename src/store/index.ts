@@ -30,7 +30,7 @@ const convertSupabaseUtente = (supabaseUser: SupabaseUtente): Utente => ({
   preferenze: supabaseUser.preferenze || [],
   recensioniScritte: [], // Verrà caricato separatamente
   professionistiPreferiti: [], // Verrà caricato separatamente
-  dataRegistrazione: supabaseUser.data_registrazione ? new Date(supabaseUser.data_registrazione) : new Date(),
+  dataRegistrazione: supabaseUser.data_registrazione || new Date().toISOString(),
   ultimoAccesso: supabaseUser.ultimo_accesso ? new Date(supabaseUser.ultimo_accesso) : undefined,
   avatar: supabaseUser.avatar,
 });
