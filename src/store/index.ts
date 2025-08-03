@@ -4,6 +4,20 @@ import { serviziPubblici, categorie } from '@/data/mockData';
 import { authHelpers, professionistiHelpers, recensioniHelpers, preferitiHelpers } from '@/lib/supabase-helpers';
 import type { Professionista, ServizioPubblico, Categoria, Recensione, Utente, LoginForm, RegisterForm, LoginProfessionistaForm, RegisterProfessionistaForm, UserType, SupabaseUtente, SupabaseProfessionista } from '@/types';
 
+// Mappatura categorie per gestire discrepanze tra Supabase e categorie locali
+const categoriaMapping: Record<string, string> = {
+  'Idraulico': 'idraulico',
+  'Elettricista': 'elettricista', 
+  'Giardiniere': 'giardiniere',
+  'Imbianchino': 'imbianchino',
+  'Meccanico': 'meccanico',
+  'Informatico': 'informatico',
+  'Pulizie': 'pulizie',
+  'Traslochi': 'traslochi',
+  'Ristrutturazioni': 'ristrutturazioni',
+  'Altro': 'altro'
+};
+
 // Funzione per convertire SupabaseUtente in Utente
 const convertSupabaseUtente = (supabaseUser: SupabaseUtente): Utente => ({
   id: supabaseUser.id,
@@ -22,29 +36,34 @@ const convertSupabaseUtente = (supabaseUser: SupabaseUtente): Utente => ({
 });
 
 // Funzione per convertire SupabaseProfessionista in Professionista
-const convertSupabaseProfessionista = (supabaseProf: SupabaseProfessionista): Professionista => ({
-  id: supabaseProf.id,
-  nome: supabaseProf.nome,
-  cognome: supabaseProf.cognome,
-  telefono: supabaseProf.telefono,
-  email: supabaseProf.email,
-  categoriaServizio: supabaseProf.categoria_servizio,
-  specializzazioni: supabaseProf.specializzazioni,
-  zonaServizio: supabaseProf.zona_servizio,
-  orariDisponibili: supabaseProf.orari_disponibili,
-  rating: supabaseProf.rating,
-  numeroRecensioni: supabaseProf.numero_recensioni,
-  fotoProfilo: supabaseProf.foto_profilo,
-  descrizione: supabaseProf.descrizione,
-  servizi: [], // Verrà caricato separatamente
-  recensioni: [], // Verrà caricato separatamente
-  isVerified: supabaseProf.is_verified,
-  isActive: supabaseProf.is_active,
-  dataRegistrazione: new Date(supabaseProf.data_registrazione),
-  ultimoAccesso: supabaseProf.ultimo_accesso ? new Date(supabaseProf.ultimo_accesso) : undefined,
-  partitaIva: supabaseProf.partita_iva,
-  codiceFiscale: supabaseProf.codice_fiscale,
-});
+const convertSupabaseProfessionista = (supabaseProf: SupabaseProfessionista): Professionista => {
+  // Normalizza la categoria usando la mappatura
+  const categoriaNormalizzata = categoriaMapping[supabaseProf.categoria_servizio] || supabaseProf.categoria_servizio.toLowerCase();
+  
+  return {
+    id: supabaseProf.id,
+    nome: supabaseProf.nome,
+    cognome: supabaseProf.cognome,
+    telefono: supabaseProf.telefono,
+    email: supabaseProf.email,
+    categoriaServizio: categoriaNormalizzata,
+    specializzazioni: supabaseProf.specializzazioni,
+    zonaServizio: supabaseProf.zona_servizio,
+    orariDisponibili: supabaseProf.orari_disponibili,
+    rating: supabaseProf.rating,
+    numeroRecensioni: supabaseProf.numero_recensioni,
+    fotoProfilo: supabaseProf.foto_profilo,
+    descrizione: supabaseProf.descrizione,
+    servizi: [], // Verrà caricato separatamente
+    recensioni: [], // Verrà caricato separatamente
+    isVerified: supabaseProf.is_verified,
+    isActive: supabaseProf.is_active,
+    dataRegistrazione: new Date(supabaseProf.data_registrazione),
+    ultimoAccesso: supabaseProf.ultimo_accesso ? new Date(supabaseProf.ultimo_accesso) : undefined,
+    partitaIva: supabaseProf.partita_iva,
+    codiceFiscale: supabaseProf.codice_fiscale,
+  };
+};
 
 interface AppState {
   // Dati principali
@@ -176,6 +195,12 @@ export const useAppStore = create<AppState>()(
         
         let filtered = [...professionisti];
 
+        // Debug: log delle categorie disponibili
+        console.log('🔍 DEBUG FILTRI:');
+        console.log('Categoria selezionata:', categoriaSelezionata);
+        console.log('Professionisti totali:', professionisti.length);
+        console.log('Categorie professionisti:', [...new Set(professionisti.map(p => p.categoriaServizio))]);
+
         // Filtro per ricerca
         if (filtroRicerca) {
           const ricerca = filtroRicerca.toLowerCase();
@@ -199,11 +224,33 @@ export const useAppStore = create<AppState>()(
           filtered = filtered.filter(p => p.rating >= filtroRating);
         }
 
-        // Filtro per categoria
+        // Filtro per categoria - MIGLIORATO
         if (categoriaSelezionata) {
-          filtered = filtered.filter(p => p.categoriaServizio === categoriaSelezionata);
+          console.log('🔍 Filtro categoria attivo:', categoriaSelezionata);
+          
+          // Trova la categoria corrispondente
+          const categoria = categorie.find(c => c.id === categoriaSelezionata);
+          if (categoria) {
+            console.log('🔍 Nome categoria trovata:', categoria.nome);
+            
+            // Filtra per nome categoria (case-insensitive) e gestisce mappature
+            filtered = filtered.filter(p => {
+              const categoriaProf = p.categoriaServizio.toLowerCase();
+              const categoriaNome = categoria.nome.toLowerCase();
+              const categoriaId = categoriaSelezionata.toLowerCase();
+              
+              return categoriaProf === categoriaNome || 
+                     categoriaProf === categoriaId ||
+                     categoriaProf === categoriaMapping[categoria.nome]?.toLowerCase();
+            });
+            
+            console.log('🔍 Professionisti filtrati per categoria:', filtered.length);
+          } else {
+            console.log('❌ Categoria non trovata:', categoriaSelezionata);
+          }
         }
 
+        console.log('🔍 Risultati finali:', filtered.length);
         set({ professionistiFiltrati: filtered });
       },
 
