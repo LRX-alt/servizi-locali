@@ -100,9 +100,11 @@ export interface RegisterForm {
   cognome: string;
   email: string;
   password: string;
-  confermaPassword: string;
   telefono?: string;
   comune?: string;
+  acceptTerms: boolean;
+  acceptPrivacy: boolean;
+  acceptMarketing: boolean;
 }
 
 // Form per professionisti
@@ -116,15 +118,17 @@ export interface RegisterProfessionistaForm {
   cognome: string;
   email: string;
   password: string;
-  confermaPassword: string;
   telefono: string;
-  categoriaServizio: string;
+  categoria_servizio: string;
   specializzazioni: string[];
-  zonaServizio: string;
-  orariDisponibili: string;
+  zona_servizio: string;
+  orari_disponibili: string;
   descrizione: string;
-  partitaIva?: string;
-  codiceFiscale?: string;
+  partita_iva?: string;
+  codice_fiscale?: string;
+  acceptTerms: boolean;
+  acceptPrivacy: boolean;
+  acceptMarketing: boolean;
 }
 
 export interface ProfiloUtente {

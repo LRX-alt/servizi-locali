@@ -349,13 +349,13 @@ export const useAppStore = create<AppState>()(
             email: form.email,
             password: form.password,
             telefono: form.telefono,
-            categoria_servizio: form.categoriaServizio,
-            specializzazioni: form.specializzazioni,
-            zona_servizio: form.zonaServizio,
-            orari_disponibili: form.orariDisponibili,
-            descrizione: form.descrizione,
-            partita_iva: form.partitaIva,
-            codice_fiscale: form.codiceFiscale,
+                      categoria_servizio: form.categoria_servizio,
+          specializzazioni: form.specializzazioni,
+          zona_servizio: form.zona_servizio,
+          orari_disponibili: form.orari_disponibili,
+          descrizione: form.descrizione,
+          partita_iva: form.partita_iva,
+          codice_fiscale: form.codice_fiscale,
           });
           
           if (user) {
