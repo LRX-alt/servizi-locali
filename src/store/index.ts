@@ -224,22 +224,26 @@ export const useAppStore = create<AppState>()(
         
         let filtered = [...professionisti];
 
-        // Filtro per ricerca
-        if (filtroRicerca) {
-          const ricerca = filtroRicerca.toLowerCase();
+        // Filtro per zona (prioritario perché usa i tab)
+        if (filtroZona) {
           filtered = filtered.filter(p => 
-            p.nome.toLowerCase().includes(ricerca) ||
-            p.cognome.toLowerCase().includes(ricerca) ||
-            p.categoriaServizio.toLowerCase().includes(ricerca) ||
-            p.specializzazioni.some(s => s.toLowerCase().includes(ricerca))
+            p.zonaServizio.toLowerCase() === filtroZona.toLowerCase()
           );
         }
 
-        // Filtro per zona
-        if (filtroZona) {
-          filtered = filtered.filter(p => 
-            p.zonaServizio.toLowerCase().includes(filtroZona.toLowerCase())
-          );
+        // Filtro per ricerca (ottimizzato)
+        if (filtroRicerca) {
+          const termini = filtroRicerca.toLowerCase().split(/\s+/).filter(Boolean);
+          filtered = filtered.filter(p => {
+            const searchableText = [
+              p.nome,
+              p.cognome,
+              p.categoriaServizio,
+              ...p.specializzazioni
+            ].join(' ').toLowerCase();
+            
+            return termini.every(termine => searchableText.includes(termine));
+          });
         }
 
         // Filtro per rating
