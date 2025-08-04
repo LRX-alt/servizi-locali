@@ -84,9 +84,6 @@ export default function Header() {
               <Link href="/servizi-pubblici" className="text-gray-700 hover:text-gray-900 font-medium">
                 Servizi Pubblici
               </Link>
-              <Link href="/mappa" className="text-gray-700 hover:text-gray-900 font-medium">
-                Mappa
-              </Link>
               {isAuthenticated && (
                 <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">
                   Dashboard
@@ -152,13 +149,6 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Servizi Pubblici
-                </Link>
-                <Link
-                  href="/mappa"
-                  className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Mappa
                 </Link>
                 {isAuthenticated && (
                   <Link

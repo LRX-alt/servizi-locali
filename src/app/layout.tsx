@@ -4,6 +4,7 @@ import Link from "next/link";
 import "./globals.css";
 import Header from "@/components/Header";
 import ToastContainer from "@/components/ToastContainer";
+import AuthProvider from "@/components/AuthProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,12 +29,13 @@ export default function RootLayout({
     <html lang="it">
       <head />
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-          <Header />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1">
-            {children}
-          </main>
-          <ToastContainer />
+        <AuthProvider>
+          <div className="min-h-screen bg-gray-50 flex flex-col">
+            <Header />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1">
+              {children}
+            </main>
+            <ToastContainer />
           
           {/* Footer */}
           <footer className="bg-white border-t border-gray-200 mt-auto">
@@ -64,11 +66,6 @@ export default function RootLayout({
                     <li>
                       <Link href="/servizi-pubblici" className="text-sm text-gray-600 hover:text-gray-900">
                         Servizi Pubblici
-                      </Link>
-                    </li>
-                    <li>
-                      <Link href="/mappa" className="text-sm text-gray-600 hover:text-gray-900">
-                        Mappa
                       </Link>
                     </li>
                   </ul>
@@ -110,7 +107,8 @@ export default function RootLayout({
               </div>
             </div>
           </footer>
-        </div>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

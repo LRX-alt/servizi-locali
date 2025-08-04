@@ -32,8 +32,7 @@ Un'applicazione web per trovare professionisti e servizi pubblici nella tua zona
 src/
 ├── app/                    # App Router di Next.js
 │   ├── page.tsx           # Homepage
-│   ├── servizi-pubblici/  # Pagina servizi pubblici
-│   └── mappa/             # Pagina mappa
+│   └── servizi-pubblici/  # Pagina servizi pubblici
 ├── components/            # Componenti React
 │   ├── Header.tsx        # Header con navigazione
 │   ├── SearchBar.tsx     # Barra di ricerca
@@ -84,12 +83,6 @@ src/
 - Numeri di telefono per chiamate dirette
 - Orari di apertura
 
-### Mappa (In Sviluppo)
-- Visualizzazione servizi pubblici
-- Marker interattivi
-- Navigazione integrata
-- Ricerca per indirizzo
-
 ## 🎨 Design System
 
 ### Colori
@@ -116,9 +109,6 @@ Il progetto include dati di esempio per:
 
 ### Variabili d'Ambiente
 ```env
-# Google Maps API (per mappa futura)
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key
-
 # Database (per sviluppo futuro)
 DATABASE_URL=your_database_url
 ```
@@ -141,7 +131,6 @@ npm run lint         # Linting
 - [x] Pagina servizi pubblici
 
 ### Fase 2 (In Sviluppo) 🔄
-- [ ] Integrazione Google Maps
 - [ ] Sistema autenticazione
 - [ ] Dashboard professionisti
 - [ ] Sistema recensioni
