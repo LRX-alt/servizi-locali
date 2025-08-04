@@ -75,11 +75,6 @@ export default function ServiziPubbliciPage() {
         </div>
       </div>
 
-      {/* Mappa */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <ServicesMap servizi={servizi} />
-      </div>
-
       {/* Lista servizi */}
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold text-gray-900">

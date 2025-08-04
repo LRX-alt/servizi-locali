@@ -37,7 +37,10 @@ export interface ServizioPubblico {
   nome: string;
   tipo: 'comune' | 'ufficio' | 'banca' | 'farmacia' | 'ospedale' | 'poste' | 'altro';
   indirizzo: string;
-
+  coordinate: {
+    lat: number;
+    lng: number;
+  };
   telefono?: string;
   orari: string;
   descrizione: string;
