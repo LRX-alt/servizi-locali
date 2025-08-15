@@ -24,7 +24,13 @@ export const authHelpers = {
       });
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
+        const msg = (authError.message || '').toLowerCase();
+        const isAlreadyRegistered = authError.status === 422 ||
+          msg.includes('already registered') ||
+          msg.includes('user already registered') ||
+          msg.includes('email already registered') ||
+          msg.includes('already exists');
+        if (isAlreadyRegistered) {
           throw new Error('Un account con questa email esiste già.');
         }
         throw new Error('Errore durante la registrazione. Riprova più tardi.');
@@ -166,7 +172,13 @@ export const professionistiHelpers = {
       });
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
+        const msg = (authError.message || '').toLowerCase();
+        const isAlreadyRegistered = authError.status === 422 ||
+          msg.includes('already registered') ||
+          msg.includes('user already registered') ||
+          msg.includes('email already registered') ||
+          msg.includes('already exists');
+        if (isAlreadyRegistered) {
           throw new Error('Un account con questa email esiste già.');
         }
         throw new Error('Errore durante la registrazione. Riprova più tardi.');
@@ -353,7 +365,7 @@ export const serviziHelpers = {
       .from('servizi')
       .select('*')
       .eq('professionista_id', profId)
-      ;
+      .order('nome', { ascending: true });
 
     if (error) throw error;
     return data || [];

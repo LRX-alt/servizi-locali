@@ -45,8 +45,9 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
     try {
       await onRegister(formData);
       onClose();
-    } catch {
-      setError('Errore durante la registrazione');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Errore durante la registrazione';
+      setError(message);
     }
   };
 
