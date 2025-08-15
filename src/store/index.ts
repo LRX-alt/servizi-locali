@@ -78,6 +78,7 @@ interface AppState {
   professionisti: Professionista[];
   professionistiFiltrati: Professionista[];
   serviziPubblici: ServizioPubblico[];
+  serviziPubbliciFiltrati: ServizioPubblico[];
   categorie: Categoria[];
   professionistaSelezionato: Professionista | null;
   categoriaSelezionata: string | null;
@@ -94,10 +95,15 @@ interface AppState {
   showToast: (message: string, type?: ToastType) => void;
   removeToast: (id: string) => void;
 
-  // Filtri
+  // Filtri professionisti
   filtroRicerca: string;
   filtroZona: string;
   filtroRating: number | null;
+  
+  // Filtri servizi pubblici
+  filtroTipoServizio: string;
+  filtroRicercaServizi: string;
+  filtroComuneServizi: string;
 
   // Stato UI
   isLoading: boolean;
@@ -109,6 +115,7 @@ interface AppState {
   userType: UserType | null;
   isAuthenticated: boolean;
   authLoading: boolean;
+  isAdmin: boolean;
 
   // Azioni dati
   setProfessionisti: (professionisti: Professionista[]) => void;
@@ -117,12 +124,19 @@ interface AppState {
   setProfessionistaSelezionato: (professionista: Professionista | null) => void;
   setCategoriaSelezionata: (categoriaId: string | null) => void;
 
-  // Azioni filtri
+  // Azioni filtri professionisti
   setFiltroRicerca: (ricerca: string) => void;
   setFiltroZona: (zona: string) => void;
   setFiltroRating: (rating: number | null) => void;
   resetFiltri: () => void;
   filtraProfessionisti: () => void;
+  
+  // Azioni filtri servizi pubblici
+  setFiltroTipoServizio: (tipo: string) => void;
+  setFiltroRicercaServizi: (ricerca: string) => void;
+  setFiltroComuneServizi: (comune: string) => void;
+  resetFiltriServizi: () => void;
+  filtraServiziPubblici: () => void;
 
   // Azioni UI
   setLoading: (loading: boolean) => void;
@@ -157,6 +171,7 @@ export const useAppStore = create<AppState>()(
       professionisti: [],
       professionistiFiltrati: [],
       serviziPubblici,
+      serviziPubbliciFiltrati: serviziPubblici,
       categorie,
       professionistaSelezionato: null,
       categoriaSelezionata: null,
@@ -172,6 +187,12 @@ export const useAppStore = create<AppState>()(
       filtroRicerca: '',
       filtroZona: '',
       filtroRating: null,
+      
+      // Filtri servizi pubblici
+      filtroTipoServizio: '',
+      filtroRicercaServizi: '',
+      filtroComuneServizi: '',
+      
       isLoading: false,
       error: null,
       utente: null,
@@ -179,33 +200,34 @@ export const useAppStore = create<AppState>()(
       userType: null,
       isAuthenticated: false,
       authLoading: false,
+      isAdmin: false,
 
       // Azioni dati
       setProfessionisti: (professionisti) => {
         set({ professionisti, professionistiFiltrati: professionisti });
       },
 
-      setServiziPubblici: (servizi) => set({ serviziPubblici: servizi }),
+      setServiziPubblici: (servizi) => set({ serviziPubblici: servizi, serviziPubbliciFiltrati: servizi }),
       setCategorie: (categorie) => set({ categorie }),
 
       setProfessionistaSelezionato: (professionista) => set({ professionistaSelezionato: professionista }),
 
       setCategoriaSelezionata: (categoriaId) => {
-        set({ categoriaSelezionata: categoriaId });
+        set({ categoriaSelezionata: categoriaId, page: 1 });
         setTimeout(() => get().filtraProfessionisti(), 0);
       },
 
       // Azioni filtri
       setFiltroRicerca: (ricerca) => {
-        set({ filtroRicerca: ricerca });
+        set({ filtroRicerca: ricerca, page: 1 });
         setTimeout(() => get().filtraProfessionisti(), 0);
       },
       setFiltroZona: (zona) => {
-        set({ filtroZona: zona });
+        set({ filtroZona: zona, page: 1 });
         setTimeout(() => get().filtraProfessionisti(), 0);
       },
       setFiltroRating: (rating) => {
-        set({ filtroRating: rating });
+        set({ filtroRating: rating, page: 1 });
         setTimeout(() => get().filtraProfessionisti(), 0);
       },
 
@@ -217,6 +239,66 @@ export const useAppStore = create<AppState>()(
           categoriaSelezionata: null,
           professionistiFiltrati: get().professionisti
         });
+      },
+      
+      // Azioni filtri servizi pubblici
+      setFiltroTipoServizio: (tipo) => {
+        set({ filtroTipoServizio: tipo });
+        setTimeout(() => get().filtraServiziPubblici(), 0);
+      },
+      
+      setFiltroRicercaServizi: (ricerca) => {
+        set({ filtroRicercaServizi: ricerca });
+        setTimeout(() => get().filtraServiziPubblici(), 0);
+      },
+      
+      setFiltroComuneServizi: (comune) => {
+        set({ filtroComuneServizi: comune });
+        setTimeout(() => get().filtraServiziPubblici(), 0);
+      },
+      
+      resetFiltriServizi: () => {
+        set({
+          filtroTipoServizio: '',
+          filtroRicercaServizi: '',
+          filtroComuneServizi: '',
+          serviziPubbliciFiltrati: get().serviziPubblici
+        });
+      },
+      
+      filtraServiziPubblici: () => {
+        const { serviziPubblici, filtroTipoServizio, filtroRicercaServizi, filtroComuneServizi } = get();
+        
+        let filtered = [...serviziPubblici];
+
+        // Filtro per tipo servizio
+        if (filtroTipoServizio && filtroTipoServizio !== 'tutti') {
+          filtered = filtered.filter(s => s.tipo === filtroTipoServizio);
+        }
+
+        // Filtro per ricerca
+        if (filtroRicercaServizi) {
+          const termini = filtroRicercaServizi.toLowerCase().split(/\s+/).filter(Boolean);
+          filtered = filtered.filter(s => {
+            const searchableText = [
+              s.nome,
+              s.tipo,
+              s.indirizzo,
+              s.descrizione
+            ].join(' ').toLowerCase();
+            
+            return termini.every(termine => searchableText.includes(termine));
+          });
+        }
+
+        // Filtro per comune
+        if (filtroComuneServizi) {
+          filtered = filtered.filter(s => 
+            s.indirizzo.toLowerCase().includes(filtroComuneServizi.toLowerCase())
+          );
+        }
+
+        set({ serviziPubbliciFiltrati: filtered });
       },
 
       filtraProfessionisti: () => {
@@ -310,6 +392,36 @@ export const useAppStore = create<AppState>()(
         set({ authLoading: true, error: null });
         
         try {
+          // Controllo utente admin speciale
+          if (
+            process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' &&
+            form.email === 'admin@servizilocali.it' &&
+            form.password === 'admin2024_secure'
+          ) {
+            set({ 
+              utente: {
+                id: 'admin_user',
+                nome: 'Admin',
+                cognome: 'Sistema',
+                email: 'admin@servizilocali.it',
+                telefono: '',
+                indirizzo: '',
+                comune: '',
+                preferenze: [],
+                recensioniScritte: [],
+                professionistiPreferiti: [],
+                dataRegistrazione: new Date().toISOString(),
+                avatar: ''
+              },
+              professionistaLoggato: null,
+              userType: 'utente',
+              isAuthenticated: true, 
+              isAdmin: true,
+              authLoading: false 
+            });
+            return;
+          }
+
           const { user } = await authHelpers.loginUser(form.email, form.password);
           
           if (user) {
@@ -327,7 +439,8 @@ export const useAppStore = create<AppState>()(
                 },
                 professionistaLoggato: null,
                 userType: 'utente',
-                isAuthenticated: true, 
+                isAuthenticated: true,
+                isAdmin: false,
                 authLoading: false 
               });
             }
@@ -466,7 +579,8 @@ export const useAppStore = create<AppState>()(
             utente: null, 
             professionistaLoggato: null,
             userType: null,
-            isAuthenticated: false 
+            isAuthenticated: false,
+            isAdmin: false
           });
         } catch (error: unknown) {
           console.error('Logout error:', error);
@@ -624,12 +738,13 @@ export const useAppStore = create<AppState>()(
         professionistaLoggato: state.professionistaLoggato,
         userType: state.userType,
         isAuthenticated: state.isAuthenticated,
+        isAdmin: state.isAdmin, // Aggiungiamo isAdmin alla persistenza
         professionisti: state.professionisti,
         professionistiFiltrati: state.professionistiFiltrati,
         categorie: state.categorie,
-        lastUpdate: Date.now() // Per gestire la scadenza della cache
+        lastUpdate: state.lastUpdate // Manteniamo il timestamp reale dell'ultimo aggiornamento
       }),
-      version: 2, // Incrementato per forzare la migrazione
+      version: 3, // Incrementato per aggiungere isAdmin alla persistenza
       migrate: (persistedState: unknown, version: number) => {
         const state = persistedState as Record<string, unknown>;
         switch (version) {
@@ -646,6 +761,12 @@ export const useAppStore = create<AppState>()(
             return {
               ...state,
               toasts: []
+            };
+          case 2:
+            // Migrazione dalla versione 2 alla 3
+            return {
+              ...state,
+              isAdmin: false // Default per utenti esistenti
             };
           default:
             return state;

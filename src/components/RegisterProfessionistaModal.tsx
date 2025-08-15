@@ -70,8 +70,9 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
     try {
       await onRegister(formData);
       onClose();
-    } catch {
-      setError('Errore durante la registrazione');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Errore durante la registrazione';
+      setError(message);
     }
   };
 
@@ -125,7 +126,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                   type="text"
                   value={formData.nome}
                   onChange={(e) => handleInputChange('nome', e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   placeholder="Nome"
                 />
               </div>
@@ -138,7 +139,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="text"
                 value={formData.cognome}
                 onChange={(e) => handleInputChange('cognome', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="Cognome"
               />
             </div>
@@ -154,7 +155,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="email@esempio.com"
               />
             </div>
@@ -170,7 +171,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="Password"
               />
             </div>
@@ -186,7 +187,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="tel"
                 value={formData.telefono}
                 onChange={(e) => handleInputChange('telefono', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="+39 123 456 7890"
               />
             </div>
@@ -202,7 +203,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
               <select
                 value={formData.categoria_servizio}
                 onChange={(e) => handleInputChange('categoria_servizio', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
                 <option value="">Seleziona categoria</option>
                 {categorieServizi.map(categoria => (
@@ -241,7 +242,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="text"
                 value={formData.zona_servizio}
                 onChange={(e) => handleInputChange('zona_servizio', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="es. Nereto, Teramo, Provincia di Teramo"
               />
             </div>
@@ -255,7 +256,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
               type="text"
               value={formData.orari_disponibili}
               onChange={(e) => handleInputChange('orari_disponibili', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               placeholder="es. Lun-Ven 8:00-18:00, Sab 8:00-12:00"
             />
           </div>
@@ -268,7 +269,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
               value={formData.descrizione}
               onChange={(e) => handleInputChange('descrizione', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               placeholder="Descrivi i tuoi servizi, esperienza, specializzazioni..."
             />
           </div>
@@ -285,7 +286,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                   type="text"
                   value={formData.partita_iva}
                   onChange={(e) => handleInputChange('partita_iva', e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   placeholder="IT12345678901"
                 />
               </div>
@@ -298,7 +299,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="text"
                 value={formData.codice_fiscale}
                 onChange={(e) => handleInputChange('codice_fiscale', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="RSSMRA80A01H501U"
               />
             </div>

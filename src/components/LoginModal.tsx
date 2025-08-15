@@ -28,7 +28,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
     try {
       await onLogin(form);
       onClose();
-    } catch (error) {
+    } catch {
       setError('Email o password non corretti');
     } finally {
       setIsSubmitting(false);
@@ -63,6 +63,8 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
               {errorMessage}
             </div>
           )}
+
+
 
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2">

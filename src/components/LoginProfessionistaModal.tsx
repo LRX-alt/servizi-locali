@@ -28,7 +28,7 @@ export default function LoginProfessionistaModal({ isOpen, onClose, onLogin, onS
     try {
       await onLogin(form);
       onClose();
-    } catch (error) {
+    } catch {
       setError('Email o password non corretti');
     } finally {
       setIsSubmitting(false);

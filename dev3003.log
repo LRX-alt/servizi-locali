@@ -1,0 +1,24 @@
+   ▲ Next.js 15.4.5
+   - Local:        http://localhost:3003
+   - Network:      http://192.168.1.8:3003
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.9s
+ ○ Compiling / ...
+ ✓ Compiled / in 8.3s (949 modules)
+ GET / 200 in 9399ms
+ ✓ Compiled in 613ms (940 modules)
+ ✓ Compiled in 388ms (940 modules)
+ ✓ Compiled in 1467ms (380 modules)
+ ✓ Compiled in 809ms (380 modules)
+ ✓ Compiled in 4.1s (380 modules)
+ ✓ Compiled in 3.4s (380 modules)
+ ✓ Compiled in 3.1s (379 modules)
+ ✓ Compiled in 858ms (379 modules)
+ ✓ Compiled in 796ms (379 modules)
+ ✓ Compiled in 675ms (379 modules)
+ ✓ Compiled in 698ms (379 modules)
+ ✓ Compiled in 579ms (379 modules)
+ ✓ Compiled in 542ms (379 modules)
+ ✓ Compiled in 755ms (379 modules)

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/store';
 import { 
   User, 
   Star, 
@@ -14,11 +16,14 @@ import {
   Settings,
   BarChart3,
   Calendar,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import { Professionista, Servizio } from '@/types';
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { isAdmin } = useAppStore();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [newService, setNewService] = useState({
@@ -455,9 +460,22 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard Professionista</h1>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Benvenuto,</span>
-            <span className="font-medium text-gray-900">{professionista.nome}</span>
+          <div className="flex items-center space-x-4">
+            {/* Pulsante Admin - Solo per amministratori */}
+            {isAdmin && (
+              <button
+                onClick={() => router.push('/admin')}
+                className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition-colors text-sm font-medium"
+                title="Pannello Amministrazione"
+              >
+                <Shield className="w-4 h-4" />
+                <span>Admin Panel</span>
+              </button>
+            )}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Benvenuto,</span>
+              <span className="font-medium text-gray-900">{professionista.nome}</span>
+            </div>
           </div>
         </div>
 

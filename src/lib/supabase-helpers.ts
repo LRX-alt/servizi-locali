@@ -18,17 +18,6 @@ export const authHelpers = {
     comune?: string;
   }) {
     try {
-      // Prima verifichiamo se l'email esiste già
-      const { data: existingUser } = await supabase
-        .from('utenti')
-        .select('id')
-        .eq('email', userData.email)
-        .single();
-
-      if (existingUser) {
-        throw new Error('Un account con questa email esiste già.');
-      }
-
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -171,17 +160,6 @@ export const professionistiHelpers = {
     codice_fiscale?: string;
   }) {
     try {
-      // Prima verifichiamo se l'email esiste già
-      const { data: existingProf } = await supabase
-        .from('professionisti')
-        .select('id')
-        .eq('email', profData.email)
-        .single();
-
-      if (existingProf) {
-        throw new Error('Un account con questa email esiste già.');
-      }
-
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: profData.email,
         password: profData.password,
@@ -299,56 +277,36 @@ export const recensioniHelpers = {
 export const preferitiHelpers = {
   // Add to favorites
   async addToFavorites(userId: string, professionistaId: string) {
-    try {
-      // Prima verifichiamo se il preferito esiste già
-      const { data: existingFavorite } = await supabase
-        .from('preferiti')
-        .select('id')
-        .eq('utente_id', userId)
-        .eq('professionista_id', professionistaId)
-        .single();
+    // Verifica se esiste già usando maybeSingle per evitare eccezioni su 0 risultati
+    const { data: existingFavorite, error: existingError } = await supabase
+      .from('preferiti')
+      .select('id')
+      .eq('utente_id', userId)
+      .eq('professionista_id', professionistaId)
+      .maybeSingle();
 
-      // Se esiste già, non facciamo nulla
-      if (existingFavorite) {
-        return existingFavorite;
-      }
+    if (existingError) throw existingError;
+    if (existingFavorite) return existingFavorite;
 
-      // Se non esiste, lo aggiungiamo
-      const { data, error } = await supabase
-        .from('preferiti')
-        .insert({
-          utente_id: userId,
-          professionista_id: professionistaId,
-        })
-        .select()
-        .single();
+    // Inserisce se non esiste
+    const { data, error } = await supabase
+      .from('preferiti')
+      .insert({
+        utente_id: userId,
+        professionista_id: professionistaId,
+      })
+      .select()
+      .single();
 
-      if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          // Se nel frattempo è stato aggiunto (race condition), va bene così
-          return { id: 'exists' };
-        }
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('No rows returned')) {
-        // Se non troviamo il record, procediamo con l'inserimento
-        const { data, error: insertError } = await supabase
-          .from('preferiti')
-          .insert({
-            utente_id: userId,
-            professionista_id: professionistaId,
-          })
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        return data;
+    if (error) {
+      if (error.code === '23505') {
+        // Unique constraint: se aggiunto in race-condition, consideriamo ok
+        return { id: 'exists' } as unknown as { id: string };
       }
       throw error;
     }
+
+    return data;
   },
 
   // Remove from favorites
@@ -380,10 +338,10 @@ export const preferitiHelpers = {
       .select('id')
       .eq('utente_id', userId)
       .eq('professionista_id', professionistaId)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error;
-    return !!data;
+    if (error) throw error;
+    return Boolean(data);
   },
 };
 
@@ -395,7 +353,7 @@ export const serviziHelpers = {
       .from('servizi')
       .select('*')
       .eq('professionista_id', profId)
-      .order('created_at', { ascending: false });
+      ;
 
     if (error) throw error;
     return data || [];

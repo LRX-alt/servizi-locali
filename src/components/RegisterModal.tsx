@@ -90,7 +90,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                   type="text"
                   value={formData.nome}
                   onChange={(e) => handleInputChange('nome', e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   placeholder="Nome"
                 />
               </div>
@@ -103,7 +103,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                 type="text"
                 value={formData.cognome}
                 onChange={(e) => handleInputChange('cognome', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="Cognome"
               />
             </div>
@@ -119,7 +119,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="email@esempio.com"
               />
             </div>
@@ -135,7 +135,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="Password"
               />
             </div>
@@ -151,7 +151,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                 type="tel"
                 value={formData.telefono}
                 onChange={(e) => handleInputChange('telefono', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="+39 123 456 7890"
               />
             </div>
@@ -167,7 +167,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                 type="text"
                 value={formData.indirizzo}
                 onChange={(e) => handleInputChange('indirizzo', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 placeholder="Via Roma 123"
               />
             </div>
@@ -181,7 +181,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
               type="text"
               value={formData.comune}
               onChange={(e) => handleInputChange('comune', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               placeholder="Nereto"
             />
           </div>

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import Header from "@/components/Header";
+import { Suspense } from "react";
 import ToastContainer from "@/components/ToastContainer";
 import AuthProvider from "@/components/AuthProvider";
 
@@ -11,8 +12,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export const metadata: Metadata = {
@@ -31,7 +30,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Header />
+            <Suspense fallback={null}>
+              <Header />
+            </Suspense>
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1">
               {children}
             </main>

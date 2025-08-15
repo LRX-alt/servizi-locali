@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store';
 import { Professionista } from '@/types';
 import { Star, Phone, MessageCircle, Heart, MapPin, Clock } from 'lucide-react';
@@ -16,6 +16,12 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
   const { utente, isAuthenticated, addReview, showToast, addFavorite, removeFavorite } = useAppStore();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  // Previeni errori di idratazione
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const handleCall = () => {
     try {
@@ -72,7 +78,25 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
   const isFavorite = utente?.professionistiPreferiti?.includes(professionista.id) || false;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div className="relative bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+      {/* Overlay blur per utenti non autenticati */}
+      {hasMounted && !isAuthenticated && (
+        <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-lg z-10 flex items-center justify-center">
+          <div className="text-center p-4">
+            <div className="mb-2">
+              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">
+              Accedi per vedere i dettagli
+            </h4>
+            <p className="text-sm text-gray-600 mb-4">
+              Registrati per contattare i professionisti e vedere tutte le informazioni
+            </p>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -88,7 +112,7 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
             <p className="text-sm text-gray-600">{professionista.categoriaServizio}</p>
           </div>
         </div>
-        {isAuthenticated ? (
+        {hasMounted && isAuthenticated ? (
           <button
             onClick={handleFavorite}
             className={`p-2 rounded-full transition-colors ${

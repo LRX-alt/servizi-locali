@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAppStore } from '@/store';
 import { Menu, X, User, Building2, LogOut } from 'lucide-react';
@@ -19,12 +20,34 @@ export default function Header() {
     logout
   } = useAppStore();
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showAuthTypeSelector, setShowAuthTypeSelector] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLoginProfessionistaModal, setShowLoginProfessionistaModal] = useState(false);
   const [showRegisterProfessionistaModal, setShowRegisterProfessionistaModal] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  // Previeni errori di idratazione
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  // Apri selettore auth da query param ?login=1
+  useEffect(() => {
+    if (!hasMounted) return;
+    const login = searchParams.get('login');
+    if (login === '1' && !isAuthenticated) {
+      setShowAuthTypeSelector(true);
+      // pulizia query param
+      const params = new URLSearchParams(searchParams);
+      params.delete('login');
+      router.replace(`?${params.toString()}`);
+    }
+  }, [hasMounted, searchParams, isAuthenticated, router]);
 
   const handleLogout = async () => {
     try {
@@ -84,7 +107,7 @@ export default function Header() {
               <Link href="/servizi-pubblici" className="text-gray-700 hover:text-gray-900 font-medium">
                 Servizi Pubblici
               </Link>
-              {isAuthenticated && (
+              {hasMounted && isAuthenticated && (
                 <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">
                   Dashboard
                 </Link>
@@ -93,7 +116,7 @@ export default function Header() {
 
             {/* Auth Buttons */}
             <div className="hidden md:flex items-center space-x-4">
-              {isAuthenticated ? (
+              {hasMounted && isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-gray-700">
                     Ciao, {userType === 'utente' ? utente?.nome : professionistaLoggato?.nome}
@@ -113,14 +136,14 @@ export default function Header() {
                     <span className="text-sm font-medium">Logout</span>
                   </button>
                 </div>
-              ) : (
+              ) : hasMounted ? (
                 <button
                   onClick={() => setShowAuthTypeSelector(true)}
                   className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Accedi
                 </button>
-              )}
+              ) : null}
             </div>
 
             {/* Mobile menu button */}
@@ -150,7 +173,7 @@ export default function Header() {
                 >
                   Servizi Pubblici
                 </Link>
-                {isAuthenticated && (
+                {hasMounted && isAuthenticated && (
                   <Link
                     href="/dashboard"
                     className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
@@ -162,7 +185,7 @@ export default function Header() {
               </nav>
 
               <div className="mt-4 pt-4 border-t border-gray-200">
-                {isAuthenticated ? (
+                {hasMounted && isAuthenticated ? (
                   <div className="space-y-2">
                     <span className="block px-3 py-2 text-sm text-gray-700">
                       Ciao, {userType === 'utente' ? utente?.nome : professionistaLoggato?.nome}
@@ -186,7 +209,7 @@ export default function Header() {
                       <span className="text-sm font-medium">Logout</span>
                     </button>
                   </div>
-                ) : (
+                ) : hasMounted ? (
                   <button
                     onClick={() => {
                       setShowAuthTypeSelector(true);
@@ -196,7 +219,7 @@ export default function Header() {
                   >
                     Accedi
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           )}
@@ -221,6 +244,7 @@ export default function Header() {
             setShowLoginModal(false);
           } catch (error) {
             console.error('Login failed:', error);
+            throw error;
           }
         }}
       />
@@ -235,6 +259,7 @@ export default function Header() {
             setShowRegisterModal(false);
           } catch (error) {
             console.error('Registration failed:', error);
+            throw error;
           }
         }}
       />
@@ -249,6 +274,7 @@ export default function Header() {
             setShowLoginProfessionistaModal(false);
           } catch (error) {
             console.error('Login professionista failed:', error);
+            throw error;
           }
         }}
       />
@@ -263,6 +289,7 @@ export default function Header() {
             setShowRegisterProfessionistaModal(false);
           } catch (error) {
             console.error('Registration professionista failed:', error);
+            throw error;
           }
         }}
       />

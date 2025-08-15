@@ -83,7 +83,7 @@ export default function ProfiloPage() {
                       type="text"
                       value={editedProfile.nome}
                       onChange={(e) => setEditedProfile({ ...editedProfile, nome: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                     />
                   ) : (
                     <p className="text-gray-900">{utente.nome}</p>
@@ -98,7 +98,7 @@ export default function ProfiloPage() {
                       type="text"
                       value={editedProfile.cognome}
                       onChange={(e) => setEditedProfile({ ...editedProfile, cognome: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                     />
                   ) : (
                     <p className="text-gray-900">{utente.cognome}</p>
@@ -123,7 +123,7 @@ export default function ProfiloPage() {
                       type="tel"
                       value={editedProfile.telefono}
                       onChange={(e) => setEditedProfile({ ...editedProfile, telefono: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                     />
                   ) : (
                     <p className="text-gray-900">{utente.telefono || 'Non specificato'}</p>
@@ -138,7 +138,7 @@ export default function ProfiloPage() {
                       type="text"
                       value={editedProfile.comune}
                       onChange={(e) => setEditedProfile({ ...editedProfile, comune: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                     />
                   ) : (
                     <p className="text-gray-900">{utente.comune || 'Non specificato'}</p>
