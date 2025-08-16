@@ -10,6 +10,7 @@ import RegisterModal from './RegisterModal';
 import LoginProfessionistaModal from './LoginProfessionistaModal';
 import RegisterProfessionistaModal from './RegisterProfessionistaModal';
 import AuthTypeSelector from './AuthTypeSelector';
+import NotificationModal from './NotificationModal';
 
 export default function Header() {
   const {
@@ -30,6 +31,7 @@ export default function Header() {
   const [showLoginProfessionistaModal, setShowLoginProfessionistaModal] = useState(false);
   const [showRegisterProfessionistaModal, setShowRegisterProfessionistaModal] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [showLogoutNotice, setShowLogoutNotice] = useState(false);
 
   // Previeni errori di idratazione
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await logout();
+      setShowLogoutNotice(true);
     } catch (error: unknown) {
       console.error('Logout error:', error);
     }
@@ -227,6 +230,12 @@ export default function Header() {
       </header>
 
       {/* Modals */}
+      <NotificationModal
+        isOpen={showLogoutNotice}
+        onClose={() => setShowLogoutNotice(false)}
+        title="Sei uscito"
+        message="Logout effettuato con successo."
+      />
       <AuthTypeSelector
         isOpen={showAuthTypeSelector}
         onClose={() => setShowAuthTypeSelector(false)}

@@ -26,10 +26,22 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
     setIsSubmitting(true);
 
     try {
+      // Validazioni minime
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email)) {
+        setError('Inserisci un\'email valida');
+        return;
+      }
+      if (!form.password || form.password.length < 8) {
+        setError('La password deve contenere almeno 8 caratteri');
+        return;
+      }
+
       await onLogin(form);
       onClose();
-    } catch {
-      setError('Email o password non corretti');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Errore durante il login';
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
