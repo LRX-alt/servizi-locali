@@ -97,11 +97,11 @@ export default function RootLayout({
 
               {/* Copyright */}
               <div className="border-t border-gray-200 mt-8 pt-8">
-                <div className="flex flex-col md:flex-row justify-between items-center">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-1">
                   <p className="text-sm text-gray-500">
                     © {new Date().getFullYear()} Servizi Locali. Tutti i diritti riservati.
                   </p>
-                  <p className="text-sm text-gray-500 mt-2 md:mt-0">
+                  <p className="text-sm text-gray-500">
                     Ideato e Sviluppato da{' '}
                     <Link href="https://neuralcodestudio.dev" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">
                       Loris Di Furio - Neuralcodestudio.dev
