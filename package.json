@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf .next",
+    "clean:all": "rm -rf .next node_modules package-lock.json",
+    "reinstall": "npm run clean:all && npm install"
+  },
+  "engines": {
+    "node": ">=18 <21"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
