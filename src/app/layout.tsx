@@ -102,7 +102,10 @@ export default function RootLayout({
                     © {new Date().getFullYear()} Servizi Locali. Tutti i diritti riservati.
                   </p>
                   <p className="text-sm text-gray-500 mt-2 md:mt-0">
-                    Made with ❤️ in Italia
+                    Ideato e Sviluppato da{' '}
+                    <Link href="https://neuralcodestudio.dev" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">
+                      Loris Di Furio - Neuralcodestudio.dev
+                    </Link>
                   </p>
                 </div>
               </div>
