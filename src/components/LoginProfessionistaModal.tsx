@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, Mail, Lock, Eye, EyeOff, Building2 } from 'lucide-react';
 import { LoginProfessionistaForm } from '@/types';
 
@@ -19,6 +19,7 @@ export default function LoginProfessionistaModal({ isOpen, onClose, onLogin, onS
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setError] = useState('');
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +33,8 @@ export default function LoginProfessionistaModal({ isOpen, onClose, onLogin, onS
         setError('Inserisci un\'email valida');
         return;
       }
-      if (!form.password || form.password.length < 8) {
-        setError('La password deve contenere almeno 8 caratteri');
+      if (!form.password) {
+        setError('Inserisci la password');
         return;
       }
 
@@ -52,17 +53,49 @@ export default function LoginProfessionistaModal({ isOpen, onClose, onLogin, onS
     if (errorMessage) setError('');
   };
 
+  // Gestione focus iniziale, ESC e focus trap (hook sempre dichiarato)
+  useEffect(() => {
+    if (!isOpen) return;
+    const container = modalRef.current;
+    const firstInput = container?.querySelector('input');
+    (firstInput as HTMLInputElement | null)?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+      if (e.key === 'Tab' && container) {
+        const focusables = Array.from(
+          container.querySelectorAll<HTMLElement>('a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])')
+        ).filter(el => !el.hasAttribute('disabled'));
+        if (focusables.length === 0) return;
+        const firstEl = focusables[0];
+        const lastEl = focusables[focusables.length - 1];
+        if (!e.shiftKey && document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        } else if (e.shiftKey && document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="login-prof-modal-title">
+      <div ref={modalRef} className="bg-white rounded-lg w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Building2 className="w-5 h-5 text-white" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 id="login-prof-modal-title" className="text-xl font-semibold text-gray-900">
               Accedi come Professionista
             </h2>
           </div>
@@ -76,7 +109,7 @@ export default function LoginProfessionistaModal({ isOpen, onClose, onLogin, onS
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {errorMessage && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm" role="alert" aria-live="assertive" id="login-prof-error">
               {errorMessage}
             </div>
           )}
@@ -93,6 +126,9 @@ export default function LoginProfessionistaModal({ isOpen, onClose, onLogin, onS
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                 placeholder="La tua email professionale"
+                autoComplete="email"
+                aria-invalid={Boolean(errorMessage)}
+                aria-describedby={errorMessage ? 'login-prof-error' : undefined}
                 required
               />
             </div>
@@ -110,6 +146,9 @@ export default function LoginProfessionistaModal({ isOpen, onClose, onLogin, onS
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                 placeholder="La tua password"
+                autoComplete="current-password"
+                aria-invalid={Boolean(errorMessage)}
+                aria-describedby={errorMessage ? 'login-prof-error' : undefined}
                 required
               />
               <button

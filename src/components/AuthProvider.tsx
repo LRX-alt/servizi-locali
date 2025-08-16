@@ -17,8 +17,27 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
     const initializeSession = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // Usa getSession per evitare errori di refresh non gestiti
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
+        if (sessionError) {
+          // Se il refresh token non è valido, effettua logout pulito
+          if (sessionError.message?.toLowerCase().includes('invalid refresh token')) {
+            try { await supabase.auth.signOut(); } catch {}
+            try { localStorage.removeItem('supabase.auth.token'); } catch {}
+            try { localStorage.removeItem('servizi-locali-storage'); } catch {}
+          }
+          useAppStore.setState({
+            utente: null,
+            professionistaLoggato: null,
+            userType: null,
+            isAuthenticated: false,
+            isAdmin: false,
+          });
+          return;
+        }
+
+        const user = session?.user;
         if (user) {
           // Proviamo a caricare profilo utente, altrimenti professionista
           try {

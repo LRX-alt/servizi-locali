@@ -66,6 +66,17 @@ export const authHelpers = {
     }
   },
 
+  // Eliminazione account utente (solo dati applicativi, non elimina l'utente da Supabase Auth)
+  async deleteUtenteAccount(userId: string) {
+    // Elimina entità collegate dove possibile, poi il profilo
+    await Promise.allSettled([
+      supabase.from('preferiti').delete().eq('utente_id', userId),
+      supabase.from('recensioni').delete().eq('utente_id', userId),
+    ]);
+    const { error } = await supabase.from('utenti').delete().eq('id', userId);
+    if (error) throw error;
+  },
+
   // Login utente
   async loginUser(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -74,7 +85,8 @@ export const authHelpers = {
     });
 
     if (error) {
-      if (error.message === 'Email not confirmed') {
+      const msg = (error.message || '').toLowerCase();
+      if (msg.includes('email not confirmed')) {
         throw new Error('Email non confermata. Controlla la tua casella email per il link di conferma.');
       }
       if (error.message === 'Invalid login credentials') {
@@ -136,6 +148,17 @@ export const professionistiHelpers = {
 
     if (error) throw error;
     return data || [];
+  },
+
+  // Eliminazione account professionista (solo dati applicativi)
+  async deleteProfessionistaAccount(profId: string) {
+    await Promise.allSettled([
+      supabase.from('servizi').delete().eq('professionista_id', profId),
+      supabase.from('recensioni').delete().eq('professionista_id', profId),
+      supabase.from('preferiti').delete().eq('professionista_id', profId),
+    ]);
+    const { error } = await supabase.from('professionisti').delete().eq('id', profId);
+    if (error) throw error;
   },
 
   // Get professionista by ID

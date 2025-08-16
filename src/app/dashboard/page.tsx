@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { 
@@ -23,7 +23,7 @@ import { Professionista, Servizio } from '@/types';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAdmin } = useAppStore();
+  const { isAdmin, userType } = useAppStore();
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [newService, setNewService] = useState({
@@ -453,6 +453,13 @@ export default function DashboardPage() {
         return renderOverview();
     }
   };
+
+  // Reindirizza fuori dalla dashboard se non sei un professionista
+  useEffect(() => {
+    if (userType && userType !== 'professionista') {
+      router.replace('/');
+    }
+  }, [userType, router]);
 
   return (
     <>

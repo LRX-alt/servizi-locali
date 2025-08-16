@@ -109,6 +109,18 @@ interface AppState {
   isLoading: boolean;
   error: string | null;
 
+  // Preferenze utente
+  privacySettings: {
+    shareProfile: boolean; // profilo visibile nei risultati
+    allowIndexing: boolean; // indicizzazione motori di ricerca
+    dataSharing: boolean; // condivisione dati anonimi per miglioramenti
+  };
+  notificationSettings: {
+    emailGeneral: boolean;
+    emailSecurity: boolean;
+    emailMarketing: boolean;
+  };
+
   // Autenticazione
   utente: Utente | null;
   professionistaLoggato: Professionista | null;
@@ -142,6 +154,10 @@ interface AppState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 
+  // Aggiornamento preferenze
+  updatePrivacySettings: (updates: Partial<AppState['privacySettings']>) => void;
+  updateNotificationSettings: (updates: Partial<AppState['notificationSettings']>) => void;
+
   // Azioni autenticazione utenti
   login: (form: LoginForm) => Promise<void>;
   register: (form: RegisterForm) => Promise<void>;
@@ -152,6 +168,8 @@ interface AppState {
   
   // Azioni comuni
   logout: () => void;
+  deleteCurrentAccount: () => Promise<void>;
+  deleteCurrentAccountCompletely: (getAccessToken: () => Promise<string | null>) => Promise<void>;
   updateProfile: (profile: Partial<Utente>) => void;
   updateProfessionistaProfile: (profile: Partial<Professionista>) => void;
   addReview: (review: Recensione) => void;
@@ -195,6 +213,16 @@ export const useAppStore = create<AppState>()(
       
       isLoading: false,
       error: null,
+      privacySettings: {
+        shareProfile: true,
+        allowIndexing: false,
+        dataSharing: false,
+      },
+      notificationSettings: {
+        emailGeneral: true,
+        emailSecurity: true,
+        emailMarketing: false,
+      },
       utente: null,
       professionistaLoggato: null,
       userType: null,
@@ -364,6 +392,12 @@ export const useAppStore = create<AppState>()(
       // Azioni UI
       setLoading: (loading) => set({ isLoading: loading }),
       setError: (error) => set({ error }),
+
+      updatePrivacySettings: (updates) =>
+        set((state) => ({ privacySettings: { ...state.privacySettings, ...updates } })),
+
+      updateNotificationSettings: (updates) =>
+        set((state) => ({ notificationSettings: { ...state.notificationSettings, ...updates } })),
       
       // Notifiche
       showToast: (message, type = 'info') => {
@@ -469,24 +503,8 @@ export const useAppStore = create<AppState>()(
           });
           
           if (user) {
-            const profile = await authHelpers.getUserProfile(user.id);
-            
-            if (profile) {
-              // Carichiamo i preferiti dell'utente (saranno vuoti per un nuovo utente)
-              const preferiti = await preferitiHelpers.getUserFavorites(user.id);
-              const utenteConvertito = convertSupabaseUtente(profile);
-              
-              set({ 
-                utente: {
-                  ...utenteConvertito,
-                  professionistiPreferiti: preferiti
-                },
-                professionistaLoggato: null,
-                userType: 'utente',
-                isAuthenticated: true, 
-                authLoading: false 
-              });
-            }
+            // Non autenticare ancora finché l'email non è confermata
+            set({ authLoading: false });
           }
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Errore durante la registrazione';
@@ -550,17 +568,8 @@ export const useAppStore = create<AppState>()(
           });
           
           if (user) {
-            const profile = await professionistiHelpers.getProfessionistaById(user.id);
-            
-            if (profile) {
-              set({ 
-                professionistaLoggato: convertSupabaseProfessionista(profile), 
-                utente: null,
-                userType: 'professionista',
-                isAuthenticated: true, 
-                authLoading: false 
-              });
-            }
+            // Non autenticare ancora finché l'email non è confermata
+            set({ authLoading: false });
           }
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Errore durante la registrazione';
@@ -584,6 +593,75 @@ export const useAppStore = create<AppState>()(
           });
         } catch (error: unknown) {
           console.error('Logout error:', error);
+        }
+      },
+
+      deleteCurrentAccount: async () => {
+        const { utente, professionistaLoggato } = get();
+        if (!utente && !professionistaLoggato) return;
+        try {
+          if (utente) {
+            await authHelpers.deleteUtenteAccount(utente.id);
+          } else if (professionistaLoggato) {
+            await professionistiHelpers.deleteProfessionistaAccount(professionistaLoggato.id);
+          }
+          await authHelpers.logout();
+          set({
+            utente: null,
+            professionistaLoggato: null,
+            userType: null,
+            isAuthenticated: false,
+            isAdmin: false
+          });
+          try { localStorage.removeItem('servizi-locali-storage'); } catch {}
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'eliminazione dell\'account';
+          set({ error: errorMessage });
+          throw error;
+        }
+      },
+
+      // Elimina dati app + utente in Supabase Auth (email compresa)
+      deleteCurrentAccountCompletely: async (getAccessToken) => {
+        const { utente, professionistaLoggato } = get();
+        if (!utente && !professionistaLoggato) return;
+        try {
+          const userId = utente?.id || professionistaLoggato?.id as string;
+          // 1) Dati applicativi
+          if (utente) {
+            await authHelpers.deleteUtenteAccount(userId);
+          } else if (professionistaLoggato) {
+            await professionistiHelpers.deleteProfessionistaAccount(userId);
+          }
+          // 2) Chiamata API per eliminare l'utente dall'Auth (email compresa)
+          const token = await getAccessToken();
+          if (!token) throw new Error('Token di accesso mancante');
+          const res = await fetch('/api/account/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ userId })
+          });
+          if (!res.ok) {
+            const { error } = await res.json().catch(() => ({ error: 'Errore' }));
+            throw new Error(error || 'Errore durante l\'eliminazione dall\'Auth');
+          }
+
+          await authHelpers.logout();
+          set({
+            utente: null,
+            professionistaLoggato: null,
+            userType: null,
+            isAuthenticated: false,
+            isAdmin: false
+          });
+          try { localStorage.removeItem('servizi-locali-storage'); } catch {}
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore durante l\'eliminazione dell\'account';
+          set({ error: errorMessage });
+          throw error;
         }
       },
 
@@ -742,9 +820,11 @@ export const useAppStore = create<AppState>()(
         professionisti: state.professionisti,
         professionistiFiltrati: state.professionistiFiltrati,
         categorie: state.categorie,
-        lastUpdate: state.lastUpdate // Manteniamo il timestamp reale dell'ultimo aggiornamento
+        lastUpdate: state.lastUpdate, // Manteniamo il timestamp reale dell'ultimo aggiornamento
+        privacySettings: state.privacySettings,
+        notificationSettings: state.notificationSettings,
       }),
-      version: 3, // Incrementato per aggiungere isAdmin alla persistenza
+      version: 4,
       migrate: (persistedState: unknown, version: number) => {
         const state = persistedState as Record<string, unknown>;
         switch (version) {
@@ -767,6 +847,21 @@ export const useAppStore = create<AppState>()(
             return {
               ...state,
               isAdmin: false // Default per utenti esistenti
+            };
+          case 3:
+            // Aggiunge preferenze con default
+            return {
+              ...state,
+              privacySettings: {
+                shareProfile: true,
+                allowIndexing: false,
+                dataSharing: false,
+              },
+              notificationSettings: {
+                emailGeneral: true,
+                emailSecurity: true,
+                emailMarketing: false,
+              }
             };
           default:
             return state;

@@ -110,7 +110,7 @@ export default function Header() {
               <Link href="/servizi-pubblici" className="text-gray-700 hover:text-gray-900 font-medium">
                 Servizi Pubblici
               </Link>
-              {hasMounted && isAuthenticated && (
+              {hasMounted && isAuthenticated && userType === 'professionista' && (
                 <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">
                   Dashboard
                 </Link>
@@ -133,7 +133,7 @@ export default function Header() {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-1 text-red-600 hover:text-red-800"
+                    className="flex items-center space-x-1 text-red-600 hover:text-red-800 cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm font-medium">Logout</span>
@@ -176,7 +176,7 @@ export default function Header() {
                 >
                   Servizi Pubblici
                 </Link>
-                {hasMounted && isAuthenticated && (
+                {hasMounted && isAuthenticated && userType === 'professionista' && (
                   <Link
                     href="/dashboard"
                     className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
@@ -206,7 +206,7 @@ export default function Header() {
                         handleLogout();
                         setIsMenuOpen(false);
                       }}
-                      className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:text-red-800 w-full text-left"
+                      className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:text-red-800 w-full text-left cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
                       <span className="text-sm font-medium">Logout</span>
@@ -236,6 +236,7 @@ export default function Header() {
         title="Sei uscito"
         message="Logout effettuato con successo."
       />
+      {/* Rimosso il pop-up di verifica email: reindirizzo direttamente alla pagina dedicata */}
       <AuthTypeSelector
         isOpen={showAuthTypeSelector}
         onClose={() => setShowAuthTypeSelector(false)}
@@ -266,6 +267,7 @@ export default function Header() {
           try {
             await useAppStore.getState().register(form);
             setShowRegisterModal(false);
+            router.push('/verifica-email');
           } catch (error) {
             console.error('Registration failed:', error);
             throw error;
@@ -296,6 +298,7 @@ export default function Header() {
           try {
             await useAppStore.getState().registerProfessionista(form);
             setShowRegisterProfessionistaModal(false);
+            router.push('/verifica-email');
           } catch (error) {
             console.error('Registration professionista failed:', error);
             throw error;

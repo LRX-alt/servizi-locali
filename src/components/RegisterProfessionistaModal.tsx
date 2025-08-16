@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, User, Mail, Lock, Phone, MapPin, Building2, FileText } from 'lucide-react';
+import { X, User, Mail, Lock, Phone, MapPin, Building2, FileText, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 interface RegisterProfessionistaModalProps {
@@ -31,6 +31,16 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
   });
 
   const [error, setError] = useState('');
+  const [invalid, setInvalid] = useState({
+    nome: false,
+    cognome: false,
+    email: false,
+    password: false,
+    telefono: false,
+    categoria_servizio: false,
+    zona_servizio: false,
+  });
+  const [showPassword, setShowPassword] = useState(false);
 
   const categorieServizi = [
     'Idraulico',
@@ -57,7 +67,25 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
     setError('');
 
     // Validazione
-    if (!formData.nome || !formData.cognome || !formData.email || !formData.password || !formData.telefono || !formData.categoria_servizio) {
+    const nextInvalid = {
+      nome: !formData.nome,
+      cognome: !formData.cognome,
+      email: !formData.email,
+      password: !formData.password,
+      telefono: !formData.telefono,
+      categoria_servizio: !formData.categoria_servizio,
+      zona_servizio: !formData.zona_servizio,
+    };
+    setInvalid(nextInvalid);
+    if (
+      nextInvalid.nome ||
+      nextInvalid.cognome ||
+      nextInvalid.email ||
+      nextInvalid.password ||
+      nextInvalid.telefono ||
+      nextInvalid.categoria_servizio ||
+      nextInvalid.zona_servizio
+    ) {
       setError('Tutti i campi obbligatori devono essere compilati');
       return;
     }
@@ -81,6 +109,8 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
       ...prev,
       [field]: value
     }));
+    if (field in invalid) setInvalid(prev => ({ ...prev, [field]: false } as typeof prev));
+    if (error) setError('');
   };
 
   const handleSpecializzazioneChange = (specializzazione: string) => {
@@ -126,7 +156,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                   type="text"
                   value={formData.nome}
                   onChange={(e) => handleInputChange('nome', e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.nome ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
                   placeholder="Nome"
                 />
               </div>
@@ -139,7 +169,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="text"
                 value={formData.cognome}
                 onChange={(e) => handleInputChange('cognome', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.cognome ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
                 placeholder="Cognome"
               />
             </div>
@@ -155,7 +185,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
                 placeholder="email@esempio.com"
               />
             </div>
@@ -168,12 +198,20 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className={`w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
                 placeholder="Password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 
@@ -187,7 +225,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="tel"
                 value={formData.telefono}
                 onChange={(e) => handleInputChange('telefono', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.telefono ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
                 placeholder="+39 123 456 7890"
               />
             </div>
@@ -203,7 +241,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
               <select
                 value={formData.categoria_servizio}
                 onChange={(e) => handleInputChange('categoria_servizio', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.categoria_servizio ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
               >
                 <option value="">Seleziona categoria</option>
                 {categorieServizi.map(categoria => (
@@ -242,7 +280,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 type="text"
                 value={formData.zona_servizio}
                 onChange={(e) => handleInputChange('zona_servizio', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.zona_servizio ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
                 placeholder="es. Nereto, Teramo, Provincia di Teramo"
               />
             </div>
