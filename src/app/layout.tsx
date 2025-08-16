@@ -97,7 +97,7 @@ export default function RootLayout({
 
               {/* Copyright */}
               <div className="border-t border-gray-200 mt-8 pt-8">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-1">
+                <div className="flex flex-col md:flex-row items-center justify-center md:justify-between md:items-center gap-1 text-center md:text-left">
                   <p className="text-sm text-gray-500">
                     © {new Date().getFullYear()} Servizi Locali. Tutti i diritti riservati.
                   </p>
