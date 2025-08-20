@@ -175,14 +175,14 @@ export default function AdminPage() {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Configurazione</h3>
             <div className="space-y-3">
-              <button className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors w-full">
+              <a href="/admin/zone" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors w-full">
                 <MapPin className="w-4 h-4" />
                 <span>Gestisci Zone</span>
-              </button>
-              <button className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full">
+              </a>
+              <a href="/admin/categorie" className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full">
                 <Building className="w-4 h-4" />
                 <span>Categorie</span>
-              </button>
+              </a>
             </div>
           </div>
         </div>

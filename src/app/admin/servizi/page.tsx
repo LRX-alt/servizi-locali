@@ -62,7 +62,7 @@ export default function AdminServiziPage() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.nome || !formData.indirizzo || !formData.orari) {
       alert('Compila tutti i campi obbligatori');
       return;
@@ -84,16 +84,32 @@ export default function AdminServiziPage() {
 
     setServiziPubblici(newServizi);
     resetForm();
-    
-    // Aggiorna anche localStorage per persistenza temporanea
-    localStorage.setItem('servizi_pubblici_custom', JSON.stringify(newServizi));
+
+    // Salva su DB
+    try {
+      const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+      const token = session?.access_token || undefined;
+      await fetch('/api/servizi-pubblici/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ items: newServizi })
+      });
+    } catch {}
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Sei sicuro di voler eliminare questo servizio?')) {
       const newServizi = serviziPubblici.filter(s => s.id !== id);
       setServiziPubblici(newServizi);
-      localStorage.setItem('servizi_pubblici_custom', JSON.stringify(newServizi));
+      try {
+        const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+        const token = session?.access_token || undefined;
+        await fetch('/api/servizi-pubblici/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ items: newServizi })
+        });
+      } catch {}
     }
   };
 
@@ -119,6 +135,17 @@ export default function AdminServiziPage() {
       </div>
     );
   }
+
+  useEffect(() => {
+    // Carica dal DB all'apertura
+    (async () => {
+      try {
+        const res = await fetch('/api/servizi-pubblici/list');
+        const json = await res.json();
+        if (res.ok && Array.isArray(json.items)) setServiziPubblici(json.items);
+      } catch {}
+    })();
+  }, [setServiziPubblici]);
 
   return (
     <div className="min-h-screen bg-gray-50">
