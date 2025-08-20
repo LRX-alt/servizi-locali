@@ -52,7 +52,7 @@ export async function GET(req: Request) {
     let query = adminClient
       .from('recensioni')
       .select('id, professionista_id, utente_id, utente_nome, rating, commento, data, stato, servizio_recensito')
-      .order('data', { ascending: false }, { nullsFirst: false });
+      .order('data', { ascending: false, nullsFirst: false });
 
     if (status && status !== 'all') {
       query = query.eq('stato', status as 'approvata' | 'pending' | 'rifiutata');
