@@ -27,7 +27,8 @@ export default function AdminCategoriePage() {
     })();
   }, [setCategorie]);
 
-  const persist = (next: any[]) => {
+  type CategoriaRow = { id: string; nome: string; icona: string; descrizione: string; ord?: number; sottocategorie?: string[] };
+  const persist = (next: CategoriaRow[]) => {
     setCategorie(next);
     (async () => {
       try {

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    type ZonaSave = { id: string; nome: string; ord?: number };
+    interface ZonaSave { id: string; nome: string; ord?: number }
     const sanitized = (items as ZonaSave[]).map((it, idx: number) => ({
       id: String(it.id),
       nome: String(it.nome || ''),
