@@ -55,7 +55,7 @@ export async function GET(req: Request) {
       .order('data', { ascending: false }, { nullsFirst: false });
 
     if (status && status !== 'all') {
-      query = query.eq('stato', status as any);
+      query = query.eq('stato', status as 'approvata' | 'pending' | 'rifiutata');
     }
 
     const { data, error } = await query;

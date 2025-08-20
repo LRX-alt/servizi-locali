@@ -16,7 +16,7 @@ export default function AdminZonePage() {
   }, [isAuthenticated, isAdmin, router]);
 
   const persist = (z: string[]) => {
-    setZone(z.map((nome, idx) => ({ id: nome.toLowerCase().replace(/\s+/g, '-'), nome })));
+    setZone(z.map((nome) => ({ id: nome.toLowerCase().replace(/\s+/g, '-'), nome })));
     // Salva su DB
     (async () => {
       const payload = z.map((nome, ord) => ({ id: nome.toLowerCase().replace(/\s+/g, '-'), nome, ord }));
@@ -52,8 +52,8 @@ export default function AdminZonePage() {
                 onClick={() => {
                   const val = newZona.trim();
                   if (!val) return;
-                  if (zone.includes(val)) return;
-                  persist([...zone, val]);
+                  if (zone.some(z => z.nome === val)) return;
+                  persist([...zone.map(z => z.nome), val]);
                   setNewZona('');
                 }}
               >

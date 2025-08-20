@@ -126,16 +126,6 @@ export default function AdminServiziPage() {
     return icons[tipo as keyof typeof icons] || '🏢';
   };
 
-  // Mostra loading se non siamo ancora autenticati, 
-  // o se siamo autenticati ma la verifica admin è in corso
-  if (!isAuthenticated || (isAuthenticated && !isAdmin)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   useEffect(() => {
     // Carica dal DB all'apertura
     (async () => {
@@ -146,6 +136,16 @@ export default function AdminServiziPage() {
       } catch {}
     })();
   }, [setServiziPubblici]);
+
+  // Mostra loading se non siamo ancora autenticati, 
+  // o se siamo autenticati ma la verifica admin è in corso
+  if (!isAuthenticated || (isAuthenticated && !isAdmin)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
