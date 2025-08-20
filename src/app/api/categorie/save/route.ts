@@ -30,7 +30,8 @@ export async function POST(req: Request) {
     const admin = createClient(supabaseUrl, serviceKey);
 
     // Semplice approccio: upsert in blocco (id come PK)
-    const sanitized = items.map((it: any, idx: number) => ({
+    type CategoriaSave = { id: string; nome: string; icona: string; descrizione?: string; ord?: number };
+    const sanitized = (items as CategoriaSave[]).map((it, idx: number) => ({
       id: String(it.id),
       nome: String(it.nome || ''),
       icona: String(it.icona || '🔧'),

@@ -44,7 +44,8 @@ export async function POST(req: Request) {
       });
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error || !user) return NextResponse.json({ error: 'Sessione non valida' }, { status: 401 });
-      isAdmin = (user as any)?.app_metadata?.role === 'admin';
+      const role = (user.app_metadata as Record<string, unknown> | undefined)?.role;
+      isAdmin = role === 'admin';
       if (!isAdmin) return NextResponse.json({ error: 'Permesso negato' }, { status: 403 });
     }
 

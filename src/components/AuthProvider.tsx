@@ -43,7 +43,8 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
         const user = session?.user;
         if (user) {
-          const isAdminRole = (user as any)?.app_metadata?.role === 'admin';
+          const role = (user.app_metadata as Record<string, unknown> | undefined)?.role;
+          const isAdminRole = role === 'admin';
           // Proviamo a caricare profilo utente, altrimenti professionista
           try {
             await useAppStore.getState().loadUserProfile(user.id);
@@ -107,7 +108,8 @@ export default function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (session?.user) {
-        const isAdminRole = (session.user as any)?.app_metadata?.role === 'admin';
+        const role = (session.user.app_metadata as Record<string, unknown> | undefined)?.role;
+        const isAdminRole = role === 'admin';
         // Carica profilo aggiornato
         try {
           await useAppStore.getState().loadUserProfile(session.user.id);

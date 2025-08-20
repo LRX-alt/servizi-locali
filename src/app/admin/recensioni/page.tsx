@@ -97,7 +97,7 @@ export default function AdminRecensioniPage() {
             </div>
             <select
               value={status}
-              onChange={e => setStatus(e.target.value as any)}
+              onChange={e => setStatus(e.target.value as 'pending' | 'approvata' | 'rifiutata' | 'all')}
               className="border rounded-md px-3 py-2"
             >
               <option value="pending">In attesa</option>

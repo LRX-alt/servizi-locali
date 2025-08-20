@@ -17,7 +17,8 @@ export async function GET() {
       .order('nome', { ascending: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const items = (data || []).map((r: any) => ({
+    type Row = { id: string; nome: string; tipo: string; indirizzo: string; lat: number | null; lng: number | null; telefono: string | null; orari: string; descrizione: string | null };
+    const items = (data as Row[] | null || []).map((r) => ({
       id: String(r.id),
       nome: r.nome,
       tipo: r.tipo,

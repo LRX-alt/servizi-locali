@@ -29,7 +29,8 @@ export async function POST(req: Request) {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const sanitized = items.map((it: any, idx: number) => ({
+    type ZonaSave = { id: string; nome: string; ord?: number };
+    const sanitized = (items as ZonaSave[]).map((it, idx: number) => ({
       id: String(it.id),
       nome: String(it.nome || ''),
       ord: typeof it.ord === 'number' ? it.ord : idx

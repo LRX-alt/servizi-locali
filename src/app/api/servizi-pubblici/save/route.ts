@@ -29,7 +29,12 @@ export async function POST(req: Request) {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const sanitized = items.map((it: any, idx: number) => ({
+    type ServizioSave = {
+      id: string; nome: string; tipo: string; indirizzo: string;
+      coordinate?: { lat: number | null; lng: number | null } | null;
+      telefono?: string | null; orari: string; descrizione?: string | null; ord?: number
+    };
+    const sanitized = (items as ServizioSave[]).map((it, idx: number) => ({
       id: String(it.id),
       nome: String(it.nome || ''),
       tipo: String(it.tipo || 'altro'),
