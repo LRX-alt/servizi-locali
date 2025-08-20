@@ -23,7 +23,8 @@ export async function POST(req: Request) {
     } else {
       const supabase = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false } });
       const { data: { user } } = await supabase.auth.getUser();
-      isAdmin = !!user && (user as any)?.app_metadata?.role === 'admin';
+      const role = (user?.app_metadata as Record<string, unknown> | undefined)?.role;
+      isAdmin = !!user && role === 'admin';
       if (!isAdmin) return NextResponse.json({ error: 'Permesso negato' }, { status: 403 });
     }
 
