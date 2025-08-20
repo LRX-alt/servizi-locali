@@ -175,6 +175,8 @@ interface AppState {
   addReview: (review: Recensione) => void;
   addFavorite: (professionistaId: string) => void;
   removeFavorite: (professionistaId: string) => void;
+  // Admin
+  moderateRecensione: (id: string, action: 'approve' | 'reject', getAccessToken: () => Promise<string | null>) => Promise<void>;
   
   // Azioni Supabase
   loadProfessionisti: () => Promise<void>;
@@ -751,6 +753,32 @@ export const useAppStore = create<AppState>()(
             const errorMessage = error instanceof Error ? error.message : 'Errore durante la rimozione dai preferiti';
             set({ error: errorMessage });
           }
+        }
+      },
+
+      // Admin: moderazione recensioni (richiede token e ruolo admin)
+      moderateRecensione: async (id, action, getAccessToken) => {
+        try {
+          const token = await getAccessToken();
+          if (!token) throw new Error('Token mancante');
+          const res = await fetch('/api/recensioni/moderate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ id, action })
+          });
+          if (!res.ok) {
+            const { error } = await res.json().catch(() => ({ error: 'Errore richiesta' }));
+            throw new Error(error || 'Errore');
+          }
+          // Aggiorna elenco professionisti per riflettere rating
+          await get().loadProfessionisti();
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Errore moderazione';
+          set({ error: errorMessage });
+          throw error;
         }
       },
 

@@ -27,22 +27,27 @@ export default function AuthProvider({ children }: AuthProviderProps) {
             try { localStorage.removeItem('supabase.auth.token'); } catch {}
             try { localStorage.removeItem('servizi-locali-storage'); } catch {}
           }
-          useAppStore.setState({
-            utente: null,
-            professionistaLoggato: null,
-            userType: null,
-            isAuthenticated: false,
-            isAdmin: false,
-          });
+          // Se abbiamo un dev admin attivo nello store, non sovrascriviamo
+          const keepDevAdmin = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' && useAppStore.getState().isAdmin;
+          if (!keepDevAdmin) {
+            useAppStore.setState({
+              utente: null,
+              professionistaLoggato: null,
+              userType: null,
+              isAuthenticated: false,
+              isAdmin: false,
+            });
+          }
           return;
         }
 
         const user = session?.user;
         if (user) {
+          const isAdminRole = (user as any)?.app_metadata?.role === 'admin';
           // Proviamo a caricare profilo utente, altrimenti professionista
           try {
             await useAppStore.getState().loadUserProfile(user.id);
-            useAppStore.setState({ isAuthenticated: true, userType: 'utente', isAdmin: false });
+            useAppStore.setState({ isAuthenticated: true, userType: 'utente', isAdmin: isAdminRole });
           } catch {
             // Ignora e tenta come professionista
           }
@@ -50,7 +55,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
           if (!useAppStore.getState().utente) {
             try {
               await useAppStore.getState().loadProfessionistaProfile(user.id);
-              useAppStore.setState({ isAuthenticated: true, userType: 'professionista', isAdmin: false });
+              useAppStore.setState({ isAuthenticated: true, userType: 'professionista', isAdmin: isAdminRole });
             } catch {
               // Se non è presente in nessuna tabella, consideriamo non autenticato coerentemente
               if (!useAppStore.getState().professionistaLoggato) {
@@ -66,13 +71,16 @@ export default function AuthProvider({ children }: AuthProviderProps) {
           }
         } else {
           // Nessuna sessione
-          useAppStore.setState({
-            utente: null,
-            professionistaLoggato: null,
-            userType: null,
-            isAuthenticated: false,
-            isAdmin: false,
-          });
+          const keepDevAdmin = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' && useAppStore.getState().isAdmin;
+          if (!keepDevAdmin) {
+            useAppStore.setState({
+              utente: null,
+              professionistaLoggato: null,
+              userType: null,
+              isAuthenticated: false,
+              isAdmin: false,
+            });
+          }
         }
       } catch {
         // In caso di errore, non bloccare l'app
@@ -85,21 +93,25 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     // Listener dei cambi di sessione
     const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
-        useAppStore.setState({
-          utente: null,
-          professionistaLoggato: null,
-          userType: null,
-          isAuthenticated: false,
-          isAdmin: false,
-        });
+        const keepDevAdmin = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' && useAppStore.getState().isAdmin;
+        if (!keepDevAdmin) {
+          useAppStore.setState({
+            utente: null,
+            professionistaLoggato: null,
+            userType: null,
+            isAuthenticated: false,
+            isAdmin: false,
+          });
+        }
         return;
       }
 
       if (session?.user) {
+        const isAdminRole = (session.user as any)?.app_metadata?.role === 'admin';
         // Carica profilo aggiornato
         try {
           await useAppStore.getState().loadUserProfile(session.user.id);
-          useAppStore.setState({ isAuthenticated: true, userType: 'utente', isAdmin: false });
+          useAppStore.setState({ isAuthenticated: true, userType: 'utente', isAdmin: isAdminRole });
         } catch {
           // Ignora e tenta come professionista
         }
@@ -107,7 +119,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
         if (!useAppStore.getState().utente) {
           try {
             await useAppStore.getState().loadProfessionistaProfile(session.user.id);
-            useAppStore.setState({ isAuthenticated: true, userType: 'professionista', isAdmin: false });
+            useAppStore.setState({ isAuthenticated: true, userType: 'professionista', isAdmin: isAdminRole });
           } catch {
             // Fallback: consideriamo non autenticato se non troviamo profilo
             if (!useAppStore.getState().professionistaLoggato) {

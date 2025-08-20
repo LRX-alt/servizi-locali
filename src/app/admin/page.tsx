@@ -1,13 +1,35 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { Shield, Users, MapPin, Building, Plus, Edit, Eye, ArrowLeft } from 'lucide-react';
 import ClientOnly from '@/components/ClientOnly';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminPage() {
   const router = useRouter();
   const { serviziPubblici, professionisti, isAdmin, isAuthenticated, logout } = useAppStore();
+
+  const [pendingApprovals, setPendingApprovals] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) return;
+    const loadPending = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token || undefined;
+        const res = await fetch('/api/recensioni/list?status=pending', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        const json = await res.json();
+        if (res.ok && Array.isArray(json.items)) {
+          setPendingApprovals(json.items.length);
+        }
+      } catch {}
+    };
+    loadPending();
+  }, [isAuthenticated, isAdmin]);
 
   // Controllo accesso admin
   if (!isAuthenticated || !isAdmin) {
@@ -34,7 +56,7 @@ export default function AdminPage() {
     servizi: serviziPubblici.length,
     professionisti: professionisti.length,
     totalUsers: 0, // Da implementare quando ci sarà il DB
-    pendingApprovals: 0 // Da implementare
+    pendingApprovals
   };
 
   return (
@@ -139,14 +161,14 @@ export default function AdminPage() {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Gestione Professionisti</h3>
             <div className="space-y-3">
-              <button className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors w-full">
+              <a href="/admin/professionisti" className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors w-full">
                 <Users className="w-4 h-4" />
                 <span>Vedi Professionisti</span>
-              </button>
-              <button className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors w-full">
+              </a>
+              <a href="/admin/recensioni" className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors w-full">
                 <Shield className="w-4 h-4" />
-                <span>Approvazioni</span>
-              </button>
+                <span>Approvazione Recensioni</span>
+              </a>
             </div>
           </div>
 

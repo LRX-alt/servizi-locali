@@ -18,7 +18,8 @@ export default function Header() {
     professionistaLoggato,
     userType,
     isAuthenticated,
-    logout
+    logout,
+    isAdmin
   } = useAppStore();
 
   const searchParams = useSearchParams();
@@ -115,6 +116,7 @@ export default function Header() {
                   Dashboard
                 </Link>
               )}
+              {/* Rimosso link Admin dalla nav centrale per evitare duplicazione */}
             </nav>
 
             {/* Auth Buttons */}
@@ -131,6 +133,14 @@ export default function Header() {
                     {userType === 'utente' ? <User className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
                     <span className="text-sm font-medium">Profilo</span>
                   </Link>
+                  {hasMounted && isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center space-x-1 text-gray-700 hover:text-gray-900"
+                    >
+                      <span className="text-sm font-medium">Admin</span>
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="flex items-center space-x-1 text-red-600 hover:text-red-800 cursor-pointer"
@@ -185,6 +195,7 @@ export default function Header() {
                     Dashboard
                   </Link>
                 )}
+                {/* Admin nel menu mobile resta solo nell'area utente sotto */}
               </nav>
 
               <div className="mt-4 pt-4 border-t border-gray-200">
@@ -193,14 +204,24 @@ export default function Header() {
                     <span className="block px-3 py-2 text-sm text-gray-700">
                       Ciao, {userType === 'utente' ? utente?.nome : professionistaLoggato?.nome}
                     </span>
-                    <Link
-                      href={userType === 'utente' ? '/profilo' : '/dashboard'}
-                      className="flex items-center space-x-2 px-3 py-2 text-blue-600 hover:text-blue-800"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
+                    <Link href={userType === 'utente' ? '/profilo' : '/dashboard'} className="flex items-center space-x-2 px-3 py-2 text-blue-600 hover:text-blue-800" onClick={() => setIsMenuOpen(false)}>
                       {userType === 'utente' ? <User className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
                       <span className="text-sm font-medium">Profilo</span>
                     </Link>
+                    {hasMounted && isAdmin && (
+                      <Link href="/admin" className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-gray-900" onClick={() => setIsMenuOpen(false)}>
+                        <span className="text-sm font-medium">Admin</span>
+                      </Link>
+                    )}
+                    {hasMounted && isAdmin && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-gray-900"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <span className="text-sm font-medium">Admin</span>
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         handleLogout();
