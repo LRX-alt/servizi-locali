@@ -8,6 +8,9 @@ import SearchBar from '@/components/SearchBar';
 import ComuniList from '@/components/ComuniList';
 import CategoryGrid from '@/components/CategoryGrid';
 import ProfessionistaCard from '@/components/ProfessionistaCard';
+import AuthHeroCard from '@/components/AuthHeroCard';
+import StickyAuthBanner from '@/components/StickyAuthBanner';
+import { useAppStore as useStore } from '@/store';
 import ProfessionistaCardSkeleton from '@/components/ProfessionistaCardSkeleton';
 
 export default function HomePage() {
@@ -19,6 +22,9 @@ export default function HomePage() {
     hasMore,
     loadMore
   } = useAppStore();
+  const { isAuthenticated } = useStore();
+  
+
 
   const { ref, inView } = useInView({
     threshold: 0,
@@ -175,18 +181,27 @@ export default function HomePage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {professionistiFiltrati.map((professionista) => (
-              <ProfessionistaCard
-                key={professionista.id}
-                professionista={professionista}
-              />
-            ))}
-            {hasMore && (
-              <div ref={ref} className="col-span-full flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            )}
+          <div className="relative">
+            {/* Griglia professionisti */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Card-hero per utenti non autenticati */}
+              {!isAuthenticated && (
+                <AuthHeroCard />
+              )}
+              
+              {professionistiFiltrati.map((professionista) => (
+                <ProfessionistaCard
+                  key={professionista.id}
+                  professionista={professionista}
+                />
+              ))}
+              
+              {hasMore && (
+                <div ref={ref} className="col-span-full flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -220,6 +235,8 @@ export default function HomePage() {
           </p>
         </div>
       </div>
+      {/* Banner sticky per utenti non autenticati */}
+      {!isAuthenticated && <StickyAuthBanner />}
     </div>
   );
 }

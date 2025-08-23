@@ -81,24 +81,14 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
     <div className="relative bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       {/* Overlay blur per utenti non autenticati */}
       {hasMounted && !isAuthenticated && (
-        <div className="absolute inset-0 backdrop-blur-sm bg-white/30 rounded-lg z-10 flex items-center justify-center">
-          <div className="text-center p-4">
-            <div className="mb-2">
-              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">
-              Accedi per vedere i dettagli
-            </h4>
-            <p className="text-sm text-gray-600 mb-4">
-              Registrati per contattare i professionisti e vedere tutte le informazioni
-            </p>
-          </div>
-        </div>
+        <div 
+          className="absolute inset-0 bg-transparent rounded-lg z-10 cursor-pointer"
+          onClick={() => (window.location.href='?login=1')}
+          aria-label="Accedi per vedere i dettagli del professionista"
+        />
       )}
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className={`flex items-start justify-between mb-4 ${!isAuthenticated ? 'blur' : ''}`}>
         <div className="flex items-center space-x-3">
           <Avatar 
             src={professionista.fotoProfilo} 
@@ -109,10 +99,12 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
             <h3 className="text-lg font-semibold text-gray-900">
               {professionista.nome} {professionista.cognome}
             </h3>
-            <p className="text-sm text-gray-600">{professionista.categoriaServizio}</p>
+            <p className="text-sm text-gray-600">
+              {professionista.categoriaServizio}
+            </p>
           </div>
         </div>
-        {hasMounted && isAuthenticated ? (
+        {hasMounted && isAuthenticated && (
           <button
             onClick={handleFavorite}
             className={`p-2 rounded-full transition-colors ${
@@ -121,11 +113,11 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
           >
             <Heart className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} />
           </button>
-        ) : null}
+        )}
       </div>
 
       {/* Rating */}
-      <div className="flex items-center space-x-2 mb-4">
+      <div className={`flex items-center space-x-2 mb-4 ${!isAuthenticated ? 'blur' : ''}`}>
         <div className="flex items-center space-x-1">
           {[...Array(5)].map((_, i) => (
             <Star
@@ -144,7 +136,7 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
       </div>
 
       {/* Info */}
-      <div className="space-y-2 mb-4">
+      <div className={`space-y-2 mb-4 ${!isAuthenticated ? 'blur' : ''}`}>
         <div className="flex items-center space-x-2 text-sm text-gray-600">
           <MapPin className="w-4 h-4" />
           <span>{professionista.zonaServizio}</span>
@@ -156,7 +148,7 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
       </div>
 
       {/* Specializzazioni */}
-      <div className="mb-4">
+      <div className={`mb-4 ${!isAuthenticated ? 'blur' : ''}`}>
         <p className="text-sm text-gray-600 mb-2">Specializzazioni:</p>
         <div className="flex flex-wrap gap-1">
           {professionista.specializzazioni.map((spec, index) => (
@@ -171,39 +163,47 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
       </div>
 
       {/* Descrizione */}
-      <p className="text-gray-700 mb-4 line-clamp-3">{professionista.descrizione}</p>
+      <p className={`mb-4 line-clamp-3 text-gray-700 ${!isAuthenticated ? 'blur' : ''}`}>
+        {professionista.descrizione}
+      </p>
 
-      {/* Azioni */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={handleCall}
-          className="flex items-center space-x-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
-        >
-          <Phone className="w-4 h-4" />
-          <span>Chiama</span>
-        </button>
-        <button
-          onClick={handleWhatsApp}
-          className="flex items-center space-x-1 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
-        >
-          <MessageCircle className="w-4 h-4" />
-          <span>WhatsApp</span>
-        </button>
-        <button
-          onClick={handleReview}
-          className="flex items-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-        >
-          <Star className="w-4 h-4" />
-          <span>Recensisci</span>
-        </button>
-      </div>
+      {/* Azioni - Solo per utenti autenticati */}
+      {isAuthenticated && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleCall}
+            className="flex items-center space-x-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+            aria-label="Chiama"
+          >
+            <Phone className="w-4 h-4" />
+            <span>Chiama</span>
+          </button>
+          <button
+            onClick={handleWhatsApp}
+            className="flex items-center space-x-1 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+            aria-label="WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>WhatsApp</span>
+          </button>
+          <button
+            onClick={handleReview}
+            className="flex items-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+            aria-label="Recensisci"
+          >
+            <Star className="w-4 h-4" />
+            <span>Recensisci</span>
+          </button>
+        </div>
+      )}
 
-      {/* Recensioni */}
-      {professionista.recensioni.length > 0 && (
+      {/* Recensioni - Solo per utenti autenticati */}
+      {isAuthenticated && professionista.recensioni.length > 0 && (
         <div className="mt-4 pt-4 border-t border-gray-200">
           <button
             onClick={() => setShowReviews(!showReviews)}
             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            aria-label="Mostra recensioni"
           >
             {showReviews ? 'Nascondi' : 'Mostra'} recensioni ({professionista.recensioni.length})
           </button>
