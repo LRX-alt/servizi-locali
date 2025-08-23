@@ -298,6 +298,7 @@ export const professionisti: Professionista[] = [
 ];
 
 export const serviziPubblici: ServizioPubblico[] = [
+  // ===== NERETO =====
   {
     id: '1',
     nome: 'Comune di Nereto',
@@ -306,7 +307,7 @@ export const serviziPubblici: ServizioPubblico[] = [
     coordinate: { lat: 42.8333, lng: 13.8167 },
     telefono: '+39 0736 123456',
     orari: 'Lun-Ven 8:30-12:30, Mar-Gio 15:00-17:00',
-    descrizione: 'Ufficio comunale per pratiche e documenti'
+    descrizione: 'Ufficio comunale per pratiche amministrative, certificati, anagrafe, stato civile, urbanistica e servizi al cittadino. Sportello unico per le attività produttive.'
   },
   {
     id: '2',
@@ -316,7 +317,7 @@ export const serviziPubblici: ServizioPubblico[] = [
     coordinate: { lat: 42.8333, lng: 13.8167 },
     telefono: '+39 0736 234567',
     orari: 'Lun-Ven 8:20-19:05, Sab 8:20-12:35',
-    descrizione: 'Ufficio postale per spedizioni e pagamenti'
+    descrizione: 'Ufficio postale per spedizioni, pagamenti, servizi bancari, pensioni, bollettini e servizi postali completi. Sportello bancomat disponibile 24/7.'
   },
   {
     id: '3',
@@ -326,17 +327,17 @@ export const serviziPubblici: ServizioPubblico[] = [
     coordinate: { lat: 42.8333, lng: 13.8167 },
     telefono: '+39 0736 345678',
     orari: 'Lun-Sab 8:30-19:30, Dom 9:00-12:00',
-    descrizione: 'Farmacia con servizio di guardia'
+    descrizione: 'Farmacia con servizio di guardia, consulenza farmaceutica, parafarmaci, prodotti per l\'igiene e servizi di consegna a domicilio per anziani.'
   },
   {
     id: '4',
-    nome: 'Banca Popolare Nereto',
+    nome: 'Banca Popolare di Ancona - Filiale Nereto',
     tipo: 'banca',
     indirizzo: 'Piazza Vittorio Emanuele, 8, 64015 Nereto TE',
     coordinate: { lat: 42.8333, lng: 13.8167 },
     telefono: '+39 0736 456789',
     orari: 'Lun-Ven 8:30-13:30, 14:30-16:30',
-    descrizione: 'Filiale bancaria per operazioni e consulenza'
+    descrizione: 'Filiale bancaria per operazioni, consulenza finanziaria, mutui, prestiti, conti correnti e servizi di investimento. Sportello bancomat interno.'
   },
   {
     id: '5',
@@ -346,26 +347,308 @@ export const serviziPubblici: ServizioPubblico[] = [
     coordinate: { lat: 42.8333, lng: 13.8167 },
     telefono: '+39 0736 567890',
     orari: 'Lun-Ven 8:00-14:00',
-    descrizione: 'Distretto sanitario per visite e certificati'
+    descrizione: 'Distretto sanitario per visite mediche, certificati, vaccinazioni, servizi di medicina generale e specialistica. Centro prelievi e servizi sociali.'
   },
   {
     id: '6',
+    nome: 'Carabinieri - Stazione Nereto',
+    tipo: 'altro',
+    indirizzo: 'Via Garibaldi, 30, 64015 Nereto TE',
+    coordinate: { lat: 42.8333, lng: 13.8167 },
+    telefono: '+39 0736 678901',
+    orari: 'H24 - Presidio permanente',
+    descrizione: 'Stazione dei Carabinieri per denunce, certificati penali, servizi di sicurezza pubblica e assistenza ai cittadini. Emergenze: 112.'
+  },
+  {
+    id: '7',
+    nome: 'Vigili del Fuoco - Comando Nereto',
+    tipo: 'altro',
+    indirizzo: 'Via delle Industrie, 15, 64015 Nereto TE',
+    coordinate: { lat: 42.8333, lng: 13.8167 },
+    telefono: '+39 0736 789012',
+    orari: 'H24 - Presidio permanente',
+    descrizione: 'Comando Vigili del Fuoco per emergenze, interventi di soccorso, verifiche di sicurezza e prevenzione incendi. Emergenze: 115.'
+  },
+  {
+    id: '8',
+    nome: 'Biblioteca Comunale Nereto',
+    tipo: 'ufficio',
+    indirizzo: 'Via Mazzini, 8, 64015 Nereto TE',
+    coordinate: { lat: 42.8333, lng: 13.8167 },
+    telefono: '+39 0736 890123',
+    orari: 'Lun-Ven 9:00-13:00, 15:00-19:00, Sab 9:00-12:00',
+    descrizione: 'Biblioteca comunale con prestito libri, sala lettura, internet point, attività culturali e laboratori per bambini e ragazzi.'
+  },
+
+  // ===== CORROPOLI =====
+  {
+    id: '9',
     nome: 'Comune di Corropoli',
     tipo: 'comune',
     indirizzo: 'Piazza Garibaldi, 1, 64013 Corropoli TE',
     coordinate: { lat: 42.8333, lng: 13.8167 },
-    telefono: '+39 0736 678901',
+    telefono: '+39 0736 901234',
     orari: 'Lun-Ven 8:30-12:30, Mar-Gio 15:00-17:00',
-    descrizione: 'Ufficio comunale per pratiche e documenti'
+    descrizione: 'Ufficio comunale per servizi amministrativi, certificati, anagrafe, stato civile, urbanistica e servizi al cittadino. Sportello unico per imprese.'
   },
   {
-    id: '7',
+    id: '10',
     nome: 'Farmacia Corropoli',
     tipo: 'farmacia',
     indirizzo: 'Via Nazionale, 45, 64013 Corropoli TE',
     coordinate: { lat: 42.8333, lng: 13.8167 },
-    telefono: '+39 0736 789012',
+    telefono: '+39 0736 012345',
     orari: 'Lun-Sab 8:30-19:30, Dom 9:00-12:00',
-    descrizione: 'Farmacia con servizio di guardia'
+    descrizione: 'Farmacia con servizio di guardia, consulenza farmaceutica, parafarmaci, prodotti per l\'igiene e servizi di consegna a domicilio.'
+  },
+  {
+    id: '11',
+    nome: 'Ufficio Postale Corropoli',
+    tipo: 'poste',
+    indirizzo: 'Via Roma, 22, 64013 Corropoli TE',
+    coordinate: { lat: 42.8333, lng: 13.8167 },
+    telefono: '+39 0736 123456',
+    orari: 'Lun-Ven 8:20-19:05, Sab 8:20-12:35',
+    descrizione: 'Ufficio postale per spedizioni, pagamenti, servizi bancari, pensioni e servizi postali. Sportello bancomat disponibile 24/7.'
+  },
+  {
+    id: '12',
+    nome: 'ASL - Distretto Sanitario Corropoli',
+    tipo: 'ufficio',
+    indirizzo: 'Via San Giovanni, 18, 64013 Corropoli TE',
+    coordinate: { lat: 42.8333, lng: 13.8167 },
+    telefono: '+39 0736 234567',
+    orari: 'Lun-Ven 8:00-14:00',
+    descrizione: 'Distretto sanitario per visite mediche, certificati, vaccinazioni e servizi di medicina generale. Centro prelievi e servizi sociali.'
+  },
+
+  // ===== MARTINSICURO =====
+  {
+    id: '13',
+    nome: 'Comune di Martinsicuro',
+    tipo: 'comune',
+    indirizzo: 'Via Roma, 1, 64014 Martinsicuro TE',
+    coordinate: { lat: 42.8833, lng: 13.9167 },
+    telefono: '+39 0735 345678',
+    orari: 'Lun-Ven 8:30-12:30, Mar-Gio 15:00-17:00',
+    descrizione: 'Ufficio comunale per servizi amministrativi, certificati, anagrafe, stato civile e urbanistica. Sportello unico per attività produttive.'
+  },
+  {
+    id: '14',
+    nome: 'Farmacia Martinsicuro',
+    tipo: 'farmacia',
+    indirizzo: 'Via Nazionale Adriatica, 125, 64014 Martinsicuro TE',
+    coordinate: { lat: 42.8833, lng: 13.9167 },
+    telefono: '+39 0735 456789',
+    orari: 'Lun-Sab 8:30-19:30, Dom 9:00-12:00',
+    descrizione: 'Farmacia con servizio di guardia, consulenza farmaceutica, parafarmaci e prodotti per l\'igiene personale e domestica.'
+  },
+  {
+    id: '15',
+    nome: 'Ufficio Postale Martinsicuro',
+    tipo: 'poste',
+    indirizzo: 'Via Roma, 45, 64014 Martinsicuro TE',
+    coordinate: { lat: 42.8833, lng: 13.9167 },
+    telefono: '+39 0735 567890',
+    orari: 'Lun-Ven 8:20-19:05, Sab 8:20-12:35',
+    descrizione: 'Ufficio postale per spedizioni, pagamenti, servizi bancari e servizi postali completi. Sportello bancomat disponibile 24/7.'
+  },
+  {
+    id: '16',
+    nome: 'Carabinieri - Stazione Martinsicuro',
+    tipo: 'altro',
+    indirizzo: 'Via Garibaldi, 12, 64014 Martinsicuro TE',
+    coordinate: { lat: 42.8833, lng: 13.9167 },
+    telefono: '+39 0735 678901',
+    orari: 'H24 - Presidio permanente',
+    descrizione: 'Stazione dei Carabinieri per denunce, certificati penali e servizi di sicurezza pubblica. Emergenze: 112.'
+  },
+
+  // ===== ALBA ADRIATICA =====
+  {
+    id: '17',
+    nome: 'Comune di Alba Adriatica',
+    tipo: 'comune',
+    indirizzo: 'Via Roma, 1, 64011 Alba Adriatica TE',
+    coordinate: { lat: 42.8333, lng: 13.9667 },
+    telefono: '+39 0861 789012',
+    orari: 'Lun-Ven 8:30-12:30, Mar-Gio 15:00-17:00',
+    descrizione: 'Ufficio comunale per servizi amministrativi, certificati, anagrafe, stato civile e urbanistica. Sportello unico per imprese e turismo.'
+  },
+  {
+    id: '18',
+    nome: 'Farmacia Alba Adriatica',
+    tipo: 'farmacia',
+    indirizzo: 'Via Nazionale Adriatica, 85, 64011 Alba Adriatica TE',
+    coordinate: { lat: 42.8333, lng: 13.9667 },
+    telefono: '+39 0861 890123',
+    orari: 'Lun-Sab 8:30-19:30, Dom 9:00-12:00',
+    descrizione: 'Farmacia con servizio di guardia, consulenza farmaceutica, parafarmaci e prodotti per l\'igiene. Servizio estivo esteso.'
+  },
+  {
+    id: '19',
+    nome: 'Ufficio Postale Alba Adriatica',
+    tipo: 'poste',
+    indirizzo: 'Via Roma, 28, 64011 Alba Adriatica TE',
+    coordinate: { lat: 42.8333, lng: 13.9667 },
+    telefono: '+39 0861 901234',
+    orari: 'Lun-Ven 8:20-19:05, Sab 8:20-12:35',
+    descrizione: 'Ufficio postale per spedizioni, pagamenti, servizi bancari e servizi postali. Sportello bancomat disponibile 24/7.'
+  },
+  {
+    id: '20',
+    nome: 'ASL - Distretto Sanitario Alba Adriatica',
+    tipo: 'ufficio',
+    indirizzo: 'Via San Francesco, 8, 64011 Alba Adriatica TE',
+    coordinate: { lat: 42.8333, lng: 13.9667 },
+    telefono: '+39 0861 012345',
+    orari: 'Lun-Ven 8:00-14:00',
+    descrizione: 'Distretto sanitario per visite mediche, certificati, vaccinazioni e servizi di medicina generale. Centro prelievi.'
+  },
+
+  // ===== TORTORETO =====
+  {
+    id: '21',
+    nome: 'Comune di Tortoreto',
+    tipo: 'comune',
+    indirizzo: 'Piazza Garibaldi, 1, 64018 Tortoreto TE',
+    coordinate: { lat: 42.8000, lng: 13.9167 },
+    telefono: '+39 0861 123456',
+    orari: 'Lun-Ven 8:30-12:30, Mar-Gio 15:00-17:00',
+    descrizione: 'Ufficio comunale per servizi amministrativi, certificati, anagrafe, stato civile e urbanistica. Sportello unico per attività produttive.'
+  },
+  {
+    id: '22',
+    nome: 'Farmacia Tortoreto',
+    tipo: 'farmacia',
+    indirizzo: 'Via Nazionale Adriatica, 95, 64018 Tortoreto TE',
+    coordinate: { lat: 42.8000, lng: 13.9167 },
+    telefono: '+39 0861 234567',
+    orari: 'Lun-Sab 8:30-19:30, Dom 9:00-12:00',
+    descrizione: 'Farmacia con servizio di guardia, consulenza farmaceutica, parafarmaci e prodotti per l\'igiene personale e domestica.'
+  },
+  {
+    id: '23',
+    nome: 'Ufficio Postale Tortoreto',
+    tipo: 'poste',
+    indirizzo: 'Via Roma, 15, 64018 Tortoreto TE',
+    coordinate: { lat: 42.8000, lng: 13.9167 },
+    telefono: '+39 0861 345678',
+    orari: 'Lun-Ven 8:20-19:05, Sab 8:20-12:35',
+    descrizione: 'Ufficio postale per spedizioni, pagamenti, servizi bancari e servizi postali completi. Sportello bancomat disponibile 24/7.'
+  },
+  {
+    id: '24',
+    nome: 'Carabinieri - Stazione Tortoreto',
+    tipo: 'altro',
+    indirizzo: 'Via Garibaldi, 25, 64018 Tortoreto TE',
+    coordinate: { lat: 42.8000, lng: 13.9167 },
+    telefono: '+39 0861 456789',
+    orari: 'H24 - Presidio permanente',
+    descrizione: 'Stazione dei Carabinieri per denunce, certificati penali e servizi di sicurezza pubblica. Emergenze: 112.'
+  },
+
+  // ===== GIULIANOVA =====
+  {
+    id: '25',
+    nome: 'Comune di Giulianova',
+    tipo: 'comune',
+    indirizzo: 'Piazza della Libertà, 1, 64021 Giulianova TE',
+    coordinate: { lat: 42.7500, lng: 13.9500 },
+    telefono: '+39 085 567890',
+    orari: 'Lun-Ven 8:30-12:30, Mar-Gio 15:00-17:00',
+    descrizione: 'Ufficio comunale per servizi amministrativi, certificati, anagrafe, stato civile e urbanistica. Sportello unico per imprese e turismo.'
+  },
+  {
+    id: '26',
+    nome: 'Farmacia Giulianova Centro',
+    tipo: 'farmacia',
+    indirizzo: 'Via Roma, 45, 64021 Giulianova TE',
+    coordinate: { lat: 42.7500, lng: 13.9500 },
+    telefono: '+39 085 678901',
+    orari: 'Lun-Sab 8:30-19:30, Dom 9:00-12:00',
+    descrizione: 'Farmacia centrale con servizio di guardia, consulenza farmaceutica, parafarmaci e prodotti per l\'igiene. Servizio estivo esteso.'
+  },
+  {
+    id: '27',
+    nome: 'Ufficio Postale Giulianova',
+    tipo: 'poste',
+    indirizzo: 'Via Nazionale Adriatica, 125, 64021 Giulianova TE',
+    coordinate: { lat: 42.7500, lng: 13.9500 },
+    telefono: '+39 085 789012',
+    orari: 'Lun-Ven 8:20-19:05, Sab 8:20-12:35',
+    descrizione: 'Ufficio postale per spedizioni, pagamenti, servizi bancari e servizi postali completi. Sportello bancomat disponibile 24/7.'
+  },
+  {
+    id: '28',
+    nome: 'ASL - Distretto Sanitario Giulianova',
+    tipo: 'ufficio',
+    indirizzo: 'Via San Francesco, 22, 64021 Giulianova TE',
+    coordinate: { lat: 42.7500, lng: 13.9500 },
+    telefono: '+39 085 890123',
+    orari: 'Lun-Ven 8:00-14:00',
+    descrizione: 'Distretto sanitario per visite mediche, certificati, vaccinazioni e servizi di medicina generale. Centro prelievi e servizi sociali.'
+  },
+  {
+    id: '29',
+    nome: 'Ospedale Civile Giulianova',
+    tipo: 'ospedale',
+    indirizzo: 'Via Nazario Sauro, 15, 64021 Giulianova TE',
+    coordinate: { lat: 42.7500, lng: 13.9500 },
+    telefono: '+39 085 901234',
+    orari: 'H24 - Servizio continuativo',
+    descrizione: 'Ospedale civile con pronto soccorso, reparti di medicina, chirurgia, pediatria e servizi diagnostici. Emergenze: 118.'
+  },
+
+  // ===== ROSETO DEGLI ABRUZZI =====
+  {
+    id: '30',
+    nome: 'Comune di Roseto degli Abruzzi',
+    tipo: 'comune',
+    indirizzo: 'Piazza della Repubblica, 1, 64026 Roseto degli Abruzzi TE',
+    coordinate: { lat: 42.6833, lng: 14.0167 },
+    telefono: '+39 085 012345',
+    orari: 'Lun-Ven 8:30-12:30, Mar-Gio 15:00-17:00',
+    descrizione: 'Ufficio comunale per servizi amministrativi, certificati, anagrafe, stato civile e urbanistica. Sportello unico per imprese e turismo.'
+  },
+  {
+    id: '31',
+    nome: 'Farmacia Roseto Centro',
+    tipo: 'farmacia',
+    indirizzo: 'Via Roma, 65, 64026 Roseto degli Abruzzi TE',
+    coordinate: { lat: 42.6833, lng: 14.0167 },
+    telefono: '+39 085 123456',
+    orari: 'Lun-Sab 8:30-19:30, Dom 9:00-12:00',
+    descrizione: 'Farmacia centrale con servizio di guardia, consulenza farmaceutica, parafarmaci e prodotti per l\'igiene. Servizio estivo esteso.'
+  },
+  {
+    id: '32',
+    nome: 'Ufficio Postale Roseto degli Abruzzi',
+    tipo: 'poste',
+    indirizzo: 'Via Nazionale Adriatica, 185, 64026 Roseto degli Abruzzi TE',
+    coordinate: { lat: 42.6833, lng: 14.0167 },
+    telefono: '+39 085 234567',
+    orari: 'Lun-Ven 8:20-19:05, Sab 8:20-12:35',
+    descrizione: 'Ufficio postale per spedizioni, pagamenti, servizi bancari e servizi postali completi. Sportello bancomat disponibile 24/7.'
+  },
+  {
+    id: '33',
+    nome: 'ASL - Distretto Sanitario Roseto',
+    tipo: 'ufficio',
+    indirizzo: 'Via San Francesco, 35, 64026 Roseto degli Abruzzi TE',
+    coordinate: { lat: 42.6833, lng: 14.0167 },
+    telefono: '+39 085 345678',
+    orari: 'Lun-Ven 8:00-14:00',
+    descrizione: 'Distretto sanitario per visite mediche, certificati, vaccinazioni e servizi di medicina generale. Centro prelievi e servizi sociali.'
+  },
+  {
+    id: '34',
+    nome: 'Ospedale Civile Roseto degli Abruzzi',
+    tipo: 'ospedale',
+    indirizzo: 'Via Nazario Sauro, 25, 64026 Roseto degli Abruzzi TE',
+    coordinate: { lat: 42.6833, lng: 14.0167 },
+    telefono: '+39 085 456789',
+    orari: 'H24 - Servizio continuativo',
+    descrizione: 'Ospedale civile con pronto soccorso, reparti di medicina, chirurgia, pediatria e servizi diagnostici. Emergenze: 118.'
   }
 ]; 
