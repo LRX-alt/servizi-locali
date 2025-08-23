@@ -7,8 +7,7 @@ import { useAppStore } from '@/store';
 import SearchBar from '@/components/SearchBar';
 import ComuniList from '@/components/ComuniList';
 import CategoryGrid from '@/components/CategoryGrid';
-import ProfessionistaCard from '@/components/ProfessionistaCard';
-import AuthHeroCard from '@/components/AuthHeroCard';
+import ProfessionistiGrid from '@/components/ProfessionistiGrid';
 import StickyAuthBanner from '@/components/StickyAuthBanner';
 import { useAppStore as useStore } from '@/store';
 import ProfessionistaCardSkeleton from '@/components/ProfessionistaCardSkeleton';
@@ -170,38 +169,12 @@ export default function HomePage() {
           </span>
         </div>
 
-        {!professionistiFiltrati || professionistiFiltrati.length === 0 ? (
-          <div className="text-center py-12">
-            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Nessun professionista trovato
-            </h3>
-            <p className="text-gray-600">
-              Prova a modificare i filtri di ricerca
-            </p>
-          </div>
-        ) : (
-          <div className="relative">
-            {/* Griglia professionisti */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Card-hero per utenti non autenticati */}
-              {!isAuthenticated && (
-                <AuthHeroCard />
-              )}
-              
-              {professionistiFiltrati.map((professionista) => (
-                <ProfessionistaCard
-                  key={professionista.id}
-                  professionista={professionista}
-                />
-              ))}
-              
-              {hasMore && (
-                <div ref={ref} className="col-span-full flex justify-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              )}
-            </div>
+        <ProfessionistiGrid />
+        
+        {/* Paginazione infinita */}
+        {hasMore && (
+          <div ref={ref} className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         )}
       </div>

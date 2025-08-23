@@ -142,6 +142,11 @@ interface AppState {
   setFiltroRating: (rating: number | null) => void;
   resetFiltri: () => void;
   filtraProfessionisti: () => void;
+  getProfessionistiPerPriorita: () => {
+    professionistiLocali: Professionista[];
+    altriProfessionisti: Professionista[];
+    hasLocali: boolean;
+  };
   
   // Azioni filtri servizi pubblici
   setFiltroTipoServizio: (tipo: string) => void;
@@ -332,7 +337,7 @@ export const useAppStore = create<AppState>()(
       },
 
       filtraProfessionisti: () => {
-        const { professionisti, filtroRicerca, filtroZona, filtroRating, categoriaSelezionata, page, itemsPerPage } = get();
+        const { professionisti, filtroRicerca, filtroZona, filtroRating, categoriaSelezionata, page, itemsPerPage, utente } = get();
         
         let filtered = [...professionisti];
 
@@ -379,6 +384,20 @@ export const useAppStore = create<AppState>()(
           }
         }
 
+        // Ordinamento per priorità geografica (prima quelli del comune dell'utente)
+        if (utente?.comune) {
+          filtered.sort((a, b) => {
+            const aIsLocal = a.zonaServizio.toLowerCase() === utente.comune!.toLowerCase();
+            const bIsLocal = b.zonaServizio.toLowerCase() === utente.comune!.toLowerCase();
+            
+            if (aIsLocal && !bIsLocal) return -1;
+            if (!aIsLocal && bIsLocal) return 1;
+            
+            // Se entrambi sono locali o entrambi non locali, mantieni l'ordine originale
+            return 0;
+          });
+        }
+
         // Paginazione
         const start = 0;
         const end = page * itemsPerPage;
@@ -389,6 +408,33 @@ export const useAppStore = create<AppState>()(
           professionistiFiltrati: paginatedResults,
           hasMore
         });
+      },
+
+      // Nuova funzione per separare professionisti per priorità geografica
+      getProfessionistiPerPriorita: () => {
+        const { professionistiFiltrati, utente } = get();
+        
+        if (!utente?.comune) {
+          return {
+            professionistiLocali: [],
+            altriProfessionisti: professionistiFiltrati,
+            hasLocali: false
+          };
+        }
+
+        const professionistiLocali = professionistiFiltrati.filter(p => 
+          p.zonaServizio.toLowerCase() === utente.comune!.toLowerCase()
+        );
+        
+        const altriProfessionisti = professionistiFiltrati.filter(p => 
+          p.zonaServizio.toLowerCase() !== utente.comune!.toLowerCase()
+        );
+
+        return {
+          professionistiLocali,
+          altriProfessionisti,
+          hasLocali: professionistiLocali.length > 0
+        };
       },
 
       // Azioni UI
