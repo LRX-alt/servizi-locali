@@ -28,7 +28,14 @@ export async function GET() {
       orari: r.orari,
       descrizione: r.descrizione ?? ''
     }));
-    return NextResponse.json({ items });
+    return NextResponse.json(
+      { items },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400",
+        },
+      }
+    );
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Errore';
     return NextResponse.json({ error: msg }, { status: 500 });

@@ -45,7 +45,7 @@ export default function HomePage() {
       <main className="space-y-6 md:space-y-8" role="main" aria-live="polite" aria-label="Caricamento in corso">
         {/* Hero Section */}
         <section className="text-center space-y-3 md:space-y-4">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mt-0">
             Trova professionisti nella tua zona
           </h1>
           <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -142,7 +142,7 @@ export default function HomePage() {
     <main className="space-y-6 md:space-y-8" role="main">
       {/* Hero Section */}
       <section className="text-center space-y-3 md:space-y-4" aria-labelledby="hero-title">
-        <h1 id="hero-title" className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+        <h1 id="hero-title" className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mt-0">
           Trova professionisti nella tua zona
         </h1>
         <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">

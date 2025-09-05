@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { serviziPubblici } from '@/data/mockData';
-import { MapPin, Phone, Clock, Navigation, Building } from 'lucide-react';
+import { MapPin, Phone, Clock, Navigation } from 'lucide-react';
 import AuthHeroCardServizi from '@/components/AuthHeroCardServizi';
 import StickyAuthBanner from '@/components/StickyAuthBanner';
 import SearchBarServizi from '@/components/SearchBarServizi';

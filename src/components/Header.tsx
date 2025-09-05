@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAppStore } from '@/store';
 import { Menu, X, User, Building2, LogOut } from 'lucide-react';
 import LoginModal from './LoginModal';
@@ -92,15 +93,18 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white shadow-sm border-b border-gray-200 pt-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Servizi Locali</span>
+            <Link href="/" className="flex items-center space-x-2 pt-1">
+              <Image
+                src="/logo_servizi-locali.png"
+                alt="Servizi Locali"
+                width={80}
+                height={80}
+                className="h-20 w-auto scale-[1.7] origin-left"
+              />
             </Link>
 
             {/* Desktop Navigation */}

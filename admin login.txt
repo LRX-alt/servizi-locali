@@ -1,1 +1,4 @@
 admin@servizilocali.it / admin2024_secure
+
+
+npm install -g npm@11.6.0
