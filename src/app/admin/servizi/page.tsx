@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { ArrowLeft, Plus, Edit, Trash2, MapPin, Phone, Clock, Save, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import type { ServizioPubblico } from '@/types';
 
 export default function AdminServiziPage() {
@@ -87,7 +88,7 @@ export default function AdminServiziPage() {
 
     // Salva su DB
     try {
-      const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token || undefined;
       await fetch('/api/servizi-pubblici/save', {
         method: 'POST',
@@ -102,7 +103,7 @@ export default function AdminServiziPage() {
       const newServizi = serviziPubblici.filter(s => s.id !== id);
       setServiziPubblici(newServizi);
       try {
-        const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token || undefined;
         await fetch('/api/servizi-pubblici/save', {
           method: 'POST',

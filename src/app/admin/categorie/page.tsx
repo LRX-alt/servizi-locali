@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Plus, Edit3, Trash2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminCategoriePage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function AdminCategoriePage() {
     setCategorie(next);
     (async () => {
       try {
-        const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token || undefined;
         await fetch('/api/categorie/save', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ items: next }) });
       } catch {}
