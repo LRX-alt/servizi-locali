@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { serviziPubblici, categorie } from '@/data/mockData';
+import { serviziPubblici, categorie, professionisti as mockProfessionisti } from '@/data/mockData';
 import { authHelpers, professionistiHelpers, recensioniHelpers, preferitiHelpers } from '@/lib/supabase-helpers';
 import type { Professionista, ServizioPubblico, Categoria, Recensione, Utente, LoginForm, RegisterForm, LoginProfessionistaForm, RegisterProfessionistaForm, UserType, SupabaseUtente, SupabaseProfessionista } from '@/types';
 
@@ -108,6 +108,8 @@ interface AppState {
   // Stato UI
   isLoading: boolean;
   error: string | null;
+  isUsingMockData: boolean; // true quando usiamo dati mock per fallback
+  lastFetchError: string | null; // ultimo errore di fetch per retry automatico
 
   // Preferenze utente
   privacySettings: {
@@ -184,7 +186,8 @@ interface AppState {
   moderateRecensione: (id: string, action: 'approve' | 'reject', getAccessToken: () => Promise<string | null>) => Promise<void>;
   
   // Azioni Supabase
-  loadProfessionisti: () => Promise<void>;
+  loadProfessionisti: (forceRefresh?: boolean) => Promise<void>;
+  retryLoadProfessionisti: () => Promise<void>; // Forza retry quando torna online
   loadUserProfile: (userId: string) => Promise<void>;
   loadProfessionistaProfile: (profId: string) => Promise<void>;
 }
@@ -220,6 +223,8 @@ export const useAppStore = create<AppState>()(
       
       isLoading: false,
       error: null,
+      isUsingMockData: false,
+      lastFetchError: null,
       privacySettings: {
         shareProfile: true,
         allowIndexing: false,
@@ -422,13 +427,19 @@ export const useAppStore = create<AppState>()(
           };
         }
 
-        const professionistiLocali = professionistiFiltrati.filter(p => 
-          p.zonaServizio.toLowerCase() === utente.comune!.toLowerCase()
-        );
+        // Normalizza il comune dell'utente: trim, lowercase
+        const comuneNormalizzato = utente.comune.trim().toLowerCase();
+
+        const professionistiLocali = professionistiFiltrati.filter(p => {
+          // Normalizza anche la zona del professionista
+          const zonaNormalizzata = (p.zonaServizio || '').trim().toLowerCase();
+          return zonaNormalizzata === comuneNormalizzato;
+        });
         
-        const altriProfessionisti = professionistiFiltrati.filter(p => 
-          p.zonaServizio.toLowerCase() !== utente.comune!.toLowerCase()
-        );
+        const altriProfessionisti = professionistiFiltrati.filter(p => {
+          const zonaNormalizzata = (p.zonaServizio || '').trim().toLowerCase();
+          return zonaNormalizzata !== comuneNormalizzato;
+        });
 
         return {
           professionistiLocali,
@@ -474,18 +485,33 @@ export const useAppStore = create<AppState>()(
         set({ authLoading: true, error: null });
         
         try {
-          // Controllo utente admin speciale
+          // Controllo utente admin di sviluppo (solo se abilitato via env)
+          // ATTENZIONE: Questo è solo per sviluppo locale. In produzione usare
+          // l'autenticazione Supabase con ruolo admin configurato via app_metadata.
+          const devAdminEnabled = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true';
+          const devAdminEmail = process.env.NEXT_PUBLIC_DEV_ADMIN_EMAIL;
+          const devAdminPassword = process.env.NEXT_PUBLIC_DEV_ADMIN_PASSWORD;
+          
           if (
-            process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' &&
-            form.email === 'admin@servizilocali.it' &&
-            form.password === 'admin2024_secure'
+            devAdminEnabled &&
+            devAdminEmail &&
+            devAdminPassword &&
+            form.email === devAdminEmail &&
+            form.password === devAdminPassword
           ) {
+            // Log warning per sicurezza
+            if (typeof window !== 'undefined') {
+              console.warn(
+                '⚠️ Login admin di sviluppo attivo. NON usare in produzione!'
+              );
+            }
+            
             set({ 
               utente: {
-                id: 'admin_user',
+                id: 'dev_admin_user',
                 nome: 'Admin',
-                cognome: 'Sistema',
-                email: 'admin@servizilocali.it',
+                cognome: 'Sviluppo',
+                email: devAdminEmail,
                 telefono: '',
                 indirizzo: '',
                 comune: '',
@@ -829,21 +855,27 @@ export const useAppStore = create<AppState>()(
       },
 
       // Azioni Supabase
-      loadProfessionisti: async () => {
+      loadProfessionisti: async (forceRefresh = false) => {
         const state = get();
         const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minuti in millisecondi
         
-        // Verifica se i dati in cache sono ancora validi
-        const isCacheValid = state.lastUpdate && 
+        // Se stiamo usando dati mock e c'è stato un errore, riprova sempre
+        const shouldRetryAfterError = state.isUsingMockData && state.lastFetchError;
+        
+        // Verifica se i dati in cache sono ancora validi (solo se non siamo in fallback)
+        const isCacheValid = !forceRefresh && 
+                           !shouldRetryAfterError &&
+                           state.lastUpdate && 
                            state.professionisti.length > 0 && 
+                           !state.isUsingMockData &&
                            Date.now() - state.lastUpdate < CACHE_TIMEOUT;
 
         if (isCacheValid) {
-          // Usa i dati dalla cache
           return;
         }
 
-        set({ isLoading: true });
+        set({ isLoading: true, error: null });
+        
         try {
           const supabaseProfessionisti = await professionistiHelpers.getAllProfessionisti();
           const professionisti = supabaseProfessionisti.map(convertSupabaseProfessionista);
@@ -851,12 +883,31 @@ export const useAppStore = create<AppState>()(
             professionisti, 
             professionistiFiltrati: professionisti, 
             lastUpdate: Date.now(),
-            isLoading: false 
+            isLoading: false,
+            isUsingMockData: false,
+            lastFetchError: null
           });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento';
-          set({ error: errorMessage, isLoading: false });
+          console.warn('[Store] Supabase non raggiungibile, uso dati di esempio:', errorMessage);
+          
+          // Fallback ai dati mock
+          set({ 
+            professionisti: mockProfessionisti, 
+            professionistiFiltrati: mockProfessionisti, 
+            lastUpdate: Date.now(),
+            isLoading: false,
+            isUsingMockData: true,
+            lastFetchError: errorMessage,
+            error: null // Non mostrare errore all'utente, abbiamo i dati mock
+          });
         }
+      },
+
+      // Forza un retry quando l'utente è tornato online
+      retryLoadProfessionisti: async () => {
+        const { loadProfessionisti } = get();
+        await loadProfessionisti(true);
       },
 
       loadUserProfile: async (userId: string) => {

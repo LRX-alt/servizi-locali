@@ -1,4 +1,15 @@
-admin@servizilocali.it / admin2024_secure
-
-
-npm install -g npm@11.6.0
+# Credenziali Admin di Sviluppo
+# ==============================
+# 
+# ATTENZIONE: Queste credenziali sono solo per sviluppo locale.
+# In produzione, configurare un utente admin tramite Supabase con
+# il ruolo 'admin' in app_metadata.
+#
+# Per abilitare l'admin di sviluppo, aggiungere queste variabili
+# nel file .env.local:
+#
+# NEXT_PUBLIC_ENABLE_DEV_ADMIN=true
+# NEXT_PUBLIC_DEV_ADMIN_EMAIL=admin@servizilocali.it
+# NEXT_PUBLIC_DEV_ADMIN_PASSWORD=<password_sicura_a_scelta>
+#
+# NON committare mai credenziali reali nel repository!

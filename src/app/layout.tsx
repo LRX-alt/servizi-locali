@@ -109,7 +109,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Suspense fallback={null}>
+            <Suspense fallback={<div className="h-20 bg-white shadow-sm border-b border-gray-200" />}>
               <Header />
             </Suspense>
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 sm:pt-2 pb-8 flex-1">

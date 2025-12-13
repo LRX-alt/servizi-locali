@@ -9,7 +9,6 @@ import ComuniList from '@/components/ComuniList';
 import CategoryGrid from '@/components/CategoryGrid';
 import ProfessionistiGrid from '@/components/ProfessionistiGrid';
 import StickyAuthBanner from '@/components/StickyAuthBanner';
-import { useAppStore as useStore } from '@/store';
 import ProfessionistaCardSkeleton from '@/components/ProfessionistaCardSkeleton';
 
 export default function HomePage() {
@@ -19,9 +18,9 @@ export default function HomePage() {
     error,
     loadProfessionisti,
     hasMore,
-    loadMore
+    loadMore,
+    isAuthenticated
   } = useAppStore();
-  const { isAuthenticated } = useStore();
   
 
 

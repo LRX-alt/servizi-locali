@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
+import { serviziHelpers, recensioniHelpers } from '@/lib/supabase-helpers';
 import { 
   User, 
   Star, 
@@ -17,60 +18,48 @@ import {
   BarChart3,
   Calendar,
   X,
-  Shield
+  Shield,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
-import { Professionista, Servizio } from '@/types';
+import { Servizio, Recensione } from '@/types';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAdmin, userType } = useAppStore();
+  const { 
+    isAdmin, 
+    userType, 
+    professionistaLoggato, 
+    updateProfessionistaProfile,
+    isAuthenticated,
+    showToast
+  } = useAppStore();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Dati caricati dal database
+  const [servizi, setServizi] = useState<Servizio[]>([]);
+  const [recensioni, setRecensioni] = useState<Recensione[]>([]);
+  
+  // Form nuovo servizio
   const [newService, setNewService] = useState({
     nome: '',
     prezzoIndicativo: '',
     descrizione: ''
   });
-  const [professionista, setProfessionista] = useState<Professionista>({
-    id: '1',
-    nome: 'Mario',
-    cognome: 'Rossi',
-    telefono: '+39 333 1234567',
-    email: 'mario.rossi@email.com',
-    categoriaServizio: 'idraulico',
-    specializzazioni: ['Riparazioni', 'Installazioni'],
-    zonaServizio: 'Centro città',
-    orariDisponibili: 'Lun-Ven 8:00-18:00',
-    rating: 4.8,
-    numeroRecensioni: 15,
-    descrizione: 'Idraulico esperto con 10 anni di esperienza. Specializzato in riparazioni e installazioni.',
-    servizi: [
-      {
-        id: '1-1',
-        nome: 'Riparazione perdite',
-        prezzoIndicativo: '€50-100',
-        descrizione: 'Riparazione perdite d\'acqua e tubature'
-      },
-      {
-        id: '1-2',
-        nome: 'Installazione sanitari',
-        prezzoIndicativo: '€200-500',
-        descrizione: 'Installazione bagni e cucine'
-      }
-    ],
-    recensioni: [
-      {
-        id: 'rec-1',
-        professionistaId: '1',
-        utenteId: 'user-1',
-        utenteNome: 'Giuseppe Bianchi',
-        rating: 5,
-        commento: 'Ottimo lavoro! Ha risolto il problema della perdita in fretta e con professionalità.',
-        data: new Date('2024-01-15'),
-        stato: 'approvata',
-        servizioRecensito: 'Riparazione perdite'
-      }
-    ]
+
+  // Form modifica profilo
+  const [editedProfile, setEditedProfile] = useState({
+    nome: '',
+    cognome: '',
+    telefono: '',
+    email: '',
+    zonaServizio: '',
+    orariDisponibili: '',
+    descrizione: ''
   });
 
   const tabs = [
@@ -81,30 +70,140 @@ export default function DashboardPage() {
     { id: 'calendar', label: 'Calendario', icon: Calendar }
   ];
 
-  const handleAddService = () => {
-    if (newService.nome && newService.prezzoIndicativo && newService.descrizione) {
-      const service: Servizio = {
-        id: `service-${Date.now()}`,
+  // Carica servizi e recensioni del professionista
+  const loadProfessionistaData = useCallback(async () => {
+    if (!professionistaLoggato?.id) return;
+    
+    setIsLoading(true);
+    try {
+      const [serviziData, recensioniData] = await Promise.all([
+        serviziHelpers.getServiziForProfessionista(professionistaLoggato.id),
+        recensioniHelpers.getRecensioniForProfessionista(professionistaLoggato.id)
+      ]);
+      
+      // Converti i dati Supabase nel formato locale
+      setServizi(serviziData.map(s => ({
+        id: s.id,
+        nome: s.nome,
+        prezzoIndicativo: s.prezzo_indicativo,
+        descrizione: s.descrizione
+      })));
+      
+      setRecensioni(recensioniData.map(r => ({
+        id: r.id,
+        professionistaId: r.professionista_id,
+        utenteId: r.utente_id,
+        utenteNome: r.utente_nome,
+        rating: r.rating,
+        commento: r.commento,
+        data: new Date(r.data),
+        stato: r.stato,
+        servizioRecensito: r.servizio_recensito
+      })));
+    } catch (error) {
+      console.error('Errore caricamento dati:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [professionistaLoggato?.id]);
+
+  // Carica dati all'avvio
+  useEffect(() => {
+    loadProfessionistaData();
+  }, [loadProfessionistaData]);
+
+  // Sincronizza form profilo quando cambia il professionista loggato
+  useEffect(() => {
+    if (professionistaLoggato) {
+      setEditedProfile({
+        nome: professionistaLoggato.nome || '',
+        cognome: professionistaLoggato.cognome || '',
+        telefono: professionistaLoggato.telefono || '',
+        email: professionistaLoggato.email || '',
+        zonaServizio: professionistaLoggato.zonaServizio || '',
+        orariDisponibili: professionistaLoggato.orariDisponibili || '',
+        descrizione: professionistaLoggato.descrizione || ''
+      });
+    }
+  }, [professionistaLoggato]);
+
+  // Reindirizza se non è un professionista autenticato
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/');
+      return;
+    }
+    if (userType && userType !== 'professionista') {
+      router.replace('/');
+    }
+  }, [userType, isAuthenticated, router]);
+
+  const handleAddService = async () => {
+    if (!professionistaLoggato?.id) return;
+    if (!newService.nome || !newService.prezzoIndicativo || !newService.descrizione) return;
+    
+    setIsSaving(true);
+    try {
+      const created = await serviziHelpers.addServizio({
+        professionista_id: professionistaLoggato.id,
         nome: newService.nome,
-        prezzoIndicativo: newService.prezzoIndicativo,
+        prezzo_indicativo: newService.prezzoIndicativo,
         descrizione: newService.descrizione
-      };
-
-      setProfessionista(prev => ({
-        ...prev,
-        servizi: [...prev.servizi, service]
-      }));
-
+      });
+      
+      setServizi(prev => [...prev, {
+        id: created.id,
+        nome: created.nome,
+        prezzoIndicativo: created.prezzo_indicativo,
+        descrizione: created.descrizione
+      }]);
+      
       setNewService({ nome: '', prezzoIndicativo: '', descrizione: '' });
       setShowAddServiceModal(false);
+      showToast('Servizio aggiunto con successo', 'success');
+    } catch (error) {
+      console.error('Errore aggiunta servizio:', error);
+      showToast('Errore durante l\'aggiunta del servizio', 'error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDeleteService = (serviceId: string) => {
-    setProfessionista(prev => ({
-      ...prev,
-      servizi: prev.servizi.filter(service => service.id !== serviceId)
-    }));
+  const handleDeleteService = async (serviceId: string) => {
+    setIsSaving(true);
+    try {
+      await serviziHelpers.deleteServizio(serviceId);
+      setServizi(prev => prev.filter(s => s.id !== serviceId));
+      showToast('Servizio eliminato', 'success');
+    } catch (error) {
+      console.error('Errore eliminazione servizio:', error);
+      showToast('Errore durante l\'eliminazione del servizio', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!professionistaLoggato) return;
+    
+    setIsSaving(true);
+    try {
+      await updateProfessionistaProfile({
+        nome: editedProfile.nome,
+        cognome: editedProfile.cognome,
+        telefono: editedProfile.telefono,
+        zonaServizio: editedProfile.zonaServizio,
+        orariDisponibili: editedProfile.orariDisponibili,
+        descrizione: editedProfile.descrizione
+      });
+      showToast('Profilo aggiornato con successo', 'success');
+    } catch (error) {
+      console.error('Errore aggiornamento profilo:', error);
+      showToast('Errore durante l\'aggiornamento del profilo', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -122,6 +221,18 @@ export default function DashboardPage() {
     ));
   };
 
+  // Mostra loading se il professionista non è ancora caricato
+  if (!professionistaLoggato) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Caricamento dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   const renderOverview = () => (
     <div className="space-y-6">
       {/* Statistiche */}
@@ -132,7 +243,7 @@ export default function DashboardPage() {
               <Star className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{professionista.rating}</p>
+              <p className="text-2xl font-bold text-gray-900">{professionistaLoggato.rating?.toFixed(1) || '0.0'}</p>
               <p className="text-sm text-gray-600">Rating medio</p>
             </div>
           </div>
@@ -144,7 +255,7 @@ export default function DashboardPage() {
               <MessageSquare className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{professionista.numeroRecensioni}</p>
+              <p className="text-2xl font-bold text-gray-900">{professionistaLoggato.numeroRecensioni || 0}</p>
               <p className="text-sm text-gray-600">Recensioni</p>
             </div>
           </div>
@@ -156,7 +267,7 @@ export default function DashboardPage() {
               <Settings className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{professionista.servizi.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{servizi.length}</p>
               <p className="text-sm text-gray-600">Servizi</p>
             </div>
           </div>
@@ -168,8 +279,8 @@ export default function DashboardPage() {
               <Phone className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">12</p>
-              <p className="text-sm text-gray-600">Chiamate oggi</p>
+              <p className="text-2xl font-bold text-gray-900">—</p>
+              <p className="text-sm text-gray-600">Contatti</p>
             </div>
           </div>
         </div>
@@ -186,24 +297,24 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900">
-                  {professionista.nome} {professionista.cognome}
+                  {professionistaLoggato.nome} {professionistaLoggato.cognome}
                 </h4>
-                <p className="text-sm text-gray-600">{professionista.categoriaServizio}</p>
+                <p className="text-sm text-gray-600 capitalize">{professionistaLoggato.categoriaServizio}</p>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <MapPin className="w-4 h-4" />
-                <span>{professionista.zonaServizio}</span>
+                <span>{professionistaLoggato.zonaServizio || 'Non specificato'}</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Clock className="w-4 h-4" />
-                <span>{professionista.orariDisponibili}</span>
+                <span>{professionistaLoggato.orariDisponibili || 'Non specificato'}</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Phone className="w-4 h-4" />
-                <span>{professionista.telefono}</span>
+                <span>{professionistaLoggato.telefono}</span>
               </div>
             </div>
           </div>
@@ -212,9 +323,9 @@ export default function DashboardPage() {
             <div>
               <h5 className="font-medium text-gray-900 mb-2">Rating</h5>
               <div className="flex items-center space-x-2">
-                {renderStars(professionista.rating)}
+                {renderStars(professionistaLoggato.rating || 0)}
                 <span className="text-sm text-gray-600">
-                  {professionista.rating} ({professionista.numeroRecensioni} recensioni)
+                  {professionistaLoggato.rating?.toFixed(1) || '0.0'} ({professionistaLoggato.numeroRecensioni || 0} recensioni)
                 </span>
               </div>
             </div>
@@ -222,26 +333,43 @@ export default function DashboardPage() {
             <div>
               <h5 className="font-medium text-gray-900 mb-2">Specializzazioni</h5>
               <div className="flex flex-wrap gap-1">
-                {professionista.specializzazioni.map((spec, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                  >
-                    {spec}
-                  </span>
-                ))}
+                {professionistaLoggato.specializzazioni?.length > 0 ? (
+                  professionistaLoggato.specializzazioni.map((spec, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                    >
+                      {spec}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-500">Nessuna specializzazione</span>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Stato verifica */}
+      {!professionistaLoggato.isVerified && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start space-x-3">
+          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-yellow-800">Profilo in attesa di verifica</h4>
+            <p className="text-sm text-yellow-700 mt-1">
+              Il tuo profilo è visibile ma non ancora verificato. Gli amministratori esamineranno la tua richiesta.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 
   const renderProfile = () => (
     <div className="bg-white p-6 rounded-lg shadow-sm border">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Modifica profilo</h3>
-      <form className="space-y-6">
+      <form onSubmit={handleSaveProfile} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2">
@@ -249,7 +377,8 @@ export default function DashboardPage() {
             </label>
             <input
               type="text"
-              defaultValue={professionista.nome}
+              value={editedProfile.nome}
+              onChange={(e) => setEditedProfile(prev => ({ ...prev, nome: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
             />
           </div>
@@ -259,7 +388,8 @@ export default function DashboardPage() {
             </label>
             <input
               type="text"
-              defaultValue={professionista.cognome}
+              value={editedProfile.cognome}
+              onChange={(e) => setEditedProfile(prev => ({ ...prev, cognome: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
             />
           </div>
@@ -272,7 +402,8 @@ export default function DashboardPage() {
             </label>
             <input
               type="tel"
-              defaultValue={professionista.telefono}
+              value={editedProfile.telefono}
+              onChange={(e) => setEditedProfile(prev => ({ ...prev, telefono: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
             />
           </div>
@@ -282,9 +413,11 @@ export default function DashboardPage() {
             </label>
             <input
               type="email"
-              defaultValue={professionista.email}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+              value={editedProfile.email}
+              disabled
+              className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-500 cursor-not-allowed"
             />
+            <p className="text-xs text-gray-500 mt-1">L&apos;email non può essere modificata</p>
           </div>
         </div>
 
@@ -294,7 +427,8 @@ export default function DashboardPage() {
           </label>
           <input
             type="text"
-            defaultValue={professionista.zonaServizio}
+            value={editedProfile.zonaServizio}
+            onChange={(e) => setEditedProfile(prev => ({ ...prev, zonaServizio: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
           />
         </div>
@@ -305,7 +439,9 @@ export default function DashboardPage() {
           </label>
           <input
             type="text"
-            defaultValue={professionista.orariDisponibili}
+            value={editedProfile.orariDisponibili}
+            onChange={(e) => setEditedProfile(prev => ({ ...prev, orariDisponibili: e.target.value }))}
+            placeholder="Es: Lun-Ven 8:00-18:00"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
           />
         </div>
@@ -315,7 +451,8 @@ export default function DashboardPage() {
             Descrizione
           </label>
           <textarea
-            defaultValue={professionista.descrizione}
+            value={editedProfile.descrizione}
+            onChange={(e) => setEditedProfile(prev => ({ ...prev, descrizione: e.target.value }))}
             rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900 placeholder-gray-500"
           />
@@ -324,9 +461,11 @@ export default function DashboardPage() {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+            disabled={isSaving}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
           >
-            Salva modifiche
+            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>Salva modifiche</span>
           </button>
         </div>
       </form>
@@ -346,33 +485,46 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {professionista.servizi.map((servizio) => (
-          <div
-            key={servizio.id}
-            className="bg-white p-4 rounded-lg shadow-sm border"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h4 className="font-semibold text-gray-900">{servizio.nome}</h4>
-                <p className="text-sm text-gray-600">{servizio.prezzoIndicativo}</p>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        </div>
+      ) : servizi.length === 0 ? (
+        <div className="bg-white p-8 rounded-lg shadow-sm border text-center">
+          <Settings className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600 mb-2">Non hai ancora aggiunto servizi</p>
+          <p className="text-sm text-gray-500">Aggiungi i servizi che offri per farti trovare dai clienti</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {servizi.map((servizio) => (
+            <div
+              key={servizio.id}
+              className="bg-white p-4 rounded-lg shadow-sm border"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="font-semibold text-gray-900">{servizio.nome}</h4>
+                  <p className="text-sm text-gray-600">{servizio.prezzoIndicativo}</p>
+                </div>
+                <div className="flex space-x-2">
+                  <button className="p-1 text-gray-400 hover:text-blue-600">
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteService(servizio.id)}
+                    disabled={isSaving}
+                    className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <div className="flex space-x-2">
-                <button className="p-1 text-gray-400 hover:text-blue-600">
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => handleDeleteService(servizio.id)}
-                  className="p-1 text-gray-400 hover:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              <p className="text-sm text-gray-600">{servizio.descrizione}</p>
             </div>
-            <p className="text-sm text-gray-600">{servizio.descrizione}</p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -382,47 +534,59 @@ export default function DashboardPage() {
         <h3 className="text-lg font-semibold text-gray-900">Recensioni ricevute</h3>
         <div className="flex items-center space-x-2">
           <div className="flex items-center space-x-1">
-            {renderStars(professionista.rating)}
+            {renderStars(professionistaLoggato.rating || 0)}
             <span className="text-sm text-gray-600">
-              {professionista.rating} ({professionista.numeroRecensioni})
+              {professionistaLoggato.rating?.toFixed(1) || '0.0'} ({professionistaLoggato.numeroRecensioni || 0})
             </span>
           </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {professionista.recensioni.map((recensione) => (
-          <div
-            key={recensione.id}
-            className="bg-white p-4 rounded-lg shadow-sm border"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-blue-600" />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        </div>
+      ) : recensioni.length === 0 ? (
+        <div className="bg-white p-8 rounded-lg shadow-sm border text-center">
+          <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600 mb-2">Non hai ancora ricevuto recensioni</p>
+          <p className="text-sm text-gray-500">Le recensioni dei clienti appariranno qui</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {recensioni.map((recensione) => (
+            <div
+              key={recensione.id}
+              className="bg-white p-4 rounded-lg shadow-sm border"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{recensione.utenteNome}</p>
+                    <p className="text-sm text-gray-600">
+                      {new Date(recensione.data).toLocaleDateString('it-IT')}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">{recensione.utenteNome}</p>
-                  <p className="text-sm text-gray-600">
-                    {new Date(recensione.data).toLocaleDateString('it-IT')}
-                  </p>
+                <div className="flex items-center space-x-1">
+                  {renderStars(recensione.rating)}
                 </div>
               </div>
-              <div className="flex items-center space-x-1">
-                {renderStars(recensione.rating)}
-              </div>
+              <p className="text-gray-700">{recensione.commento}</p>
+              {recensione.servizioRecensito && (
+                <div className="mt-2">
+                  <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    {recensione.servizioRecensito}
+                  </span>
+                </div>
+              )}
             </div>
-            <p className="text-gray-700">{recensione.commento}</p>
-            {recensione.servizioRecensito && (
-              <div className="mt-2">
-                <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                  {recensione.servizioRecensito}
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -454,13 +618,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Reindirizza fuori dalla dashboard se non sei un professionista
-  useEffect(() => {
-    if (userType && userType !== 'professionista') {
-      router.replace('/');
-    }
-  }, [userType, router]);
-
   return (
     <>
       <div className="space-y-6">
@@ -481,21 +638,21 @@ export default function DashboardPage() {
             )}
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">Benvenuto,</span>
-              <span className="font-medium text-gray-900">{professionista.nome}</span>
+              <span className="font-medium text-gray-900">{professionistaLoggato.nome}</span>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-8">
+          <nav className="flex space-x-8 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -584,9 +741,11 @@ export default function DashboardPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+                  disabled={isSaving}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center space-x-2"
                 >
-                  Aggiungi servizio
+                  {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>Aggiungi servizio</span>
                 </button>
               </div>
             </form>
@@ -595,4 +754,4 @@ export default function DashboardPage() {
       )}
     </>
   );
-} 
+}
