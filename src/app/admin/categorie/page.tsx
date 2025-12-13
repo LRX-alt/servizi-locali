@@ -17,16 +17,18 @@ export default function AdminCategoriePage() {
     if (isAuthenticated && !isAdmin) router.push('/admin');
   }, [isAuthenticated, isAdmin, router]);
 
-  // Carica eventuali categorie custom da localStorage
+  // Carica eventuali categorie custom da localStorage solo quando siamo sicuri che l'utente sia admin
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/categorie/list');
-        const json = await res.json();
-        if (res.ok && Array.isArray(json.items)) setCategorie(json.items);
-      } catch {}
-    })();
-  }, [setCategorie]);
+    if (isAuthenticated && isAdmin) {
+      (async () => {
+        try {
+          const res = await fetch('/api/categorie/list');
+          const json = await res.json();
+          if (res.ok && Array.isArray(json.items)) setCategorie(json.items);
+        } catch {}
+      })();
+    }
+  }, [setCategorie, isAuthenticated, isAdmin]);
 
   type CategoriaRow = { id: string; nome: string; icona: string; descrizione: string; ord?: number; sottocategorie?: string[] };
   const persist = (next: CategoriaRow[]) => {

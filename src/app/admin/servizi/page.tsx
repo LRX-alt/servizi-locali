@@ -128,15 +128,17 @@ export default function AdminServiziPage() {
   };
 
   useEffect(() => {
-    // Carica dal DB all'apertura
-    (async () => {
-      try {
-        const res = await fetch('/api/servizi-pubblici/list');
-        const json = await res.json();
-        if (res.ok && Array.isArray(json.items)) setServiziPubblici(json.items);
-      } catch {}
-    })();
-  }, [setServiziPubblici]);
+    // Carica dal DB solo quando siamo sicuri che l'utente sia admin
+    if (isAuthenticated && isAdmin) {
+      (async () => {
+        try {
+          const res = await fetch('/api/servizi-pubblici/list');
+          const json = await res.json();
+          if (res.ok && Array.isArray(json.items)) setServiziPubblici(json.items);
+        } catch {}
+      })();
+    }
+  }, [setServiziPubblici, isAuthenticated, isAdmin]);
 
   // Mostra loading se non siamo ancora autenticati, 
   // o se siamo autenticati ma la verifica admin è in corso
