@@ -10,6 +10,6 @@
 #
 # NEXT_PUBLIC_ENABLE_DEV_ADMIN=true
 # NEXT_PUBLIC_DEV_ADMIN_EMAIL=admin@servizilocali.it
-# NEXT_PUBLIC_DEV_ADMIN_PASSWORD=admin2024_secure
+# NEXT_PUBLIC_DEV_ADMIN_PASSWORD=<password_sicura_a_scelta>
 #
 # NON committare mai credenziali reali nel repository!

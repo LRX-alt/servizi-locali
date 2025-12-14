@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Plus, Edit3, Trash2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 
 export default function AdminCategoriePage() {
   const router = useRouter();
@@ -17,25 +16,23 @@ export default function AdminCategoriePage() {
     if (isAuthenticated && !isAdmin) router.push('/admin');
   }, [isAuthenticated, isAdmin, router]);
 
-  // Carica eventuali categorie custom da localStorage solo quando siamo sicuri che l'utente sia admin
+  // Carica eventuali categorie custom da localStorage
   useEffect(() => {
-    if (isAuthenticated && isAdmin) {
-      (async () => {
-        try {
-          const res = await fetch('/api/categorie/list');
-          const json = await res.json();
-          if (res.ok && Array.isArray(json.items)) setCategorie(json.items);
-        } catch {}
-      })();
-    }
-  }, [setCategorie, isAuthenticated, isAdmin]);
+    (async () => {
+      try {
+        const res = await fetch('/api/categorie/list');
+        const json = await res.json();
+        if (res.ok && Array.isArray(json.items)) setCategorie(json.items);
+      } catch {}
+    })();
+  }, [setCategorie]);
 
   type CategoriaRow = { id: string; nome: string; icona: string; descrizione: string; ord?: number; sottocategorie?: string[] };
   const persist = (next: CategoriaRow[]) => {
     setCategorie(next);
     (async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
         const token = session?.access_token || undefined;
         await fetch('/api/categorie/save', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ items: next }) });
       } catch {}

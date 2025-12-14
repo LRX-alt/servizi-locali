@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAppStore } from '@/store';
@@ -23,6 +23,7 @@ export default function Header() {
     isAdmin
   } = useAppStore();
 
+  const searchParams = useSearchParams();
   const router = useRouter();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -40,19 +41,17 @@ export default function Header() {
   }, []);
 
   // Apri selettore auth da query param ?login=1
-  // Usa window.location invece di useSearchParams per evitare problemi di hydration
   useEffect(() => {
     if (!hasMounted) return;
-    const params = new URLSearchParams(window.location.search);
-    const login = params.get('login');
+    const login = searchParams.get('login');
     if (login === '1' && !isAuthenticated) {
       setShowAuthTypeSelector(true);
       // pulizia query param
+      const params = new URLSearchParams(searchParams);
       params.delete('login');
-      const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
-      router.replace(newUrl);
+      router.replace(`?${params.toString()}`);
     }
-  }, [hasMounted, isAuthenticated, router]);
+  }, [hasMounted, searchParams, isAuthenticated, router]);
 
   const handleLogout = async () => {
     try {
@@ -92,9 +91,13 @@ export default function Header() {
     }
   };
 
+  // Evita qualsiasi mismatch SSR/CSR: renderizza l'header solo dopo il mount client
+  // (MA dopo aver chiamato tutti gli hook, per non violare le Rules of Hooks)
+  if (!hasMounted) return null;
+
   return (
     <>
-      <header className="bg-white shadow-sm border-b border-gray-200 pt-2" suppressHydrationWarning>
+      <header className="bg-white shadow-sm border-b border-gray-200 pt-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             {/* Logo */}
@@ -105,28 +108,27 @@ export default function Header() {
                 width={80}
                 height={80}
                 className="h-20 w-auto scale-[1.7] origin-left"
-                priority
               />
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8" suppressHydrationWarning>
+            <nav className="hidden md:flex items-center space-x-8">
               <Link href="/" className="text-gray-700 hover:text-gray-900 font-medium">
                 Home
               </Link>
               <Link href="/servizi-pubblici" className="text-gray-700 hover:text-gray-900 font-medium">
                 Servizi Pubblici
               </Link>
-              {hasMounted && isAuthenticated && userType === 'professionista' ? (
+              {hasMounted && isAuthenticated && userType === 'professionista' && (
                 <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">
                   Dashboard
                 </Link>
-              ) : null}
+              )}
               {/* Rimosso link Admin dalla nav centrale per evitare duplicazione */}
             </nav>
 
             {/* Auth Buttons */}
-            <div className="hidden md:flex items-center space-x-4" suppressHydrationWarning>
+            <div className="hidden md:flex items-center space-x-4">
               {hasMounted && isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-gray-700">
@@ -162,9 +164,7 @@ export default function Header() {
                 >
                   Accedi
                 </button>
-              ) : (
-                <div className="w-20 h-10" aria-hidden="true" />
-              )}
+              ) : null}
             </div>
 
             {/* Mobile menu button */}
@@ -179,7 +179,7 @@ export default function Header() {
           {/* Mobile Navigation */}
           {isMenuOpen && (
             <div className="md:hidden py-4 border-t border-gray-200">
-              <nav className="space-y-2" suppressHydrationWarning>
+              <nav className="space-y-2">
                 <Link
                   href="/"
                   className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
@@ -194,7 +194,7 @@ export default function Header() {
                 >
                   Servizi Pubblici
                 </Link>
-                {hasMounted && isAuthenticated && userType === 'professionista' ? (
+                {hasMounted && isAuthenticated && userType === 'professionista' && (
                   <Link
                     href="/dashboard"
                     className="block px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
@@ -202,11 +202,11 @@ export default function Header() {
                   >
                     Dashboard
                   </Link>
-                ) : null}
+                )}
                 {/* Admin nel menu mobile resta solo nell'area utente sotto */}
               </nav>
 
-              <div className="mt-4 pt-4 border-t border-gray-200" suppressHydrationWarning>
+              <div className="mt-4 pt-4 border-t border-gray-200">
                 {hasMounted && isAuthenticated ? (
                   <div className="space-y-2">
                     <span className="block px-3 py-2 text-sm text-gray-700">
@@ -246,9 +246,7 @@ export default function Header() {
                   >
                     Accedi
                   </button>
-                ) : (
-                  <div className="w-full h-10" aria-hidden="true" />
-                )}
+                ) : null}
               </div>
             </div>
           )}
@@ -262,7 +260,7 @@ export default function Header() {
         title="Sei uscito"
         message="Logout effettuato con successo."
       />
-
+      {/* Rimosso il pop-up di verifica email: reindirizzo direttamente alla pagina dedicata */}
       <AuthTypeSelector
         isOpen={showAuthTypeSelector}
         onClose={() => setShowAuthTypeSelector(false)}

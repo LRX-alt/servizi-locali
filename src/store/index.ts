@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { serviziPubblici, categorie, professionisti as mockProfessionisti } from '@/data/mockData';
+import { serviziPubblici, categorie } from '@/data/mockData';
 import { authHelpers, professionistiHelpers, recensioniHelpers, preferitiHelpers } from '@/lib/supabase-helpers';
 import type { Professionista, ServizioPubblico, Categoria, Recensione, Utente, LoginForm, RegisterForm, LoginProfessionistaForm, RegisterProfessionistaForm, UserType, SupabaseUtente, SupabaseProfessionista } from '@/types';
 
@@ -108,8 +108,6 @@ interface AppState {
   // Stato UI
   isLoading: boolean;
   error: string | null;
-  isUsingMockData: boolean; // true quando usiamo dati mock per fallback
-  lastFetchError: string | null; // ultimo errore di fetch per retry automatico
 
   // Preferenze utente
   privacySettings: {
@@ -186,8 +184,7 @@ interface AppState {
   moderateRecensione: (id: string, action: 'approve' | 'reject', getAccessToken: () => Promise<string | null>) => Promise<void>;
   
   // Azioni Supabase
-  loadProfessionisti: (forceRefresh?: boolean) => Promise<void>;
-  retryLoadProfessionisti: () => Promise<void>; // Forza retry quando torna online
+  loadProfessionisti: () => Promise<void>;
   loadUserProfile: (userId: string) => Promise<void>;
   loadProfessionistaProfile: (profId: string) => Promise<void>;
 }
@@ -223,8 +220,6 @@ export const useAppStore = create<AppState>()(
       
       isLoading: false,
       error: null,
-      isUsingMockData: false,
-      lastFetchError: null,
       privacySettings: {
         shareProfile: true,
         allowIndexing: false,
@@ -491,7 +486,16 @@ export const useAppStore = create<AppState>()(
           const devAdminEnabled = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true';
           const devAdminEmail = process.env.NEXT_PUBLIC_DEV_ADMIN_EMAIL;
           const devAdminPassword = process.env.NEXT_PUBLIC_DEV_ADMIN_PASSWORD;
-          
+
+          // Debug per verificare che le variabili siano lette
+          console.log('🔧 Admin check:', {
+            devAdminEnabled,
+            devAdminEmail,
+            devAdminPassword,
+            formEmail: form.email,
+            formPassword: form.password?.substring(0, 3) + '...' // nascondi password
+          });
+
           if (
             devAdminEnabled &&
             devAdminEmail &&
@@ -855,27 +859,21 @@ export const useAppStore = create<AppState>()(
       },
 
       // Azioni Supabase
-      loadProfessionisti: async (forceRefresh = false) => {
+      loadProfessionisti: async () => {
         const state = get();
         const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minuti in millisecondi
         
-        // Se stiamo usando dati mock e c'è stato un errore, riprova sempre
-        const shouldRetryAfterError = state.isUsingMockData && state.lastFetchError;
-        
-        // Verifica se i dati in cache sono ancora validi (solo se non siamo in fallback)
-        const isCacheValid = !forceRefresh && 
-                           !shouldRetryAfterError &&
-                           state.lastUpdate && 
+        // Verifica se i dati in cache sono ancora validi
+        const isCacheValid = state.lastUpdate && 
                            state.professionisti.length > 0 && 
-                           !state.isUsingMockData &&
                            Date.now() - state.lastUpdate < CACHE_TIMEOUT;
 
         if (isCacheValid) {
+          // Usa i dati dalla cache
           return;
         }
 
-        set({ isLoading: true, error: null });
-        
+        set({ isLoading: true });
         try {
           const supabaseProfessionisti = await professionistiHelpers.getAllProfessionisti();
           const professionisti = supabaseProfessionisti.map(convertSupabaseProfessionista);
@@ -883,31 +881,12 @@ export const useAppStore = create<AppState>()(
             professionisti, 
             professionistiFiltrati: professionisti, 
             lastUpdate: Date.now(),
-            isLoading: false,
-            isUsingMockData: false,
-            lastFetchError: null
+            isLoading: false 
           });
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Errore durante il caricamento';
-          console.warn('[Store] Supabase non raggiungibile, uso dati di esempio:', errorMessage);
-          
-          // Fallback ai dati mock
-          set({ 
-            professionisti: mockProfessionisti, 
-            professionistiFiltrati: mockProfessionisti, 
-            lastUpdate: Date.now(),
-            isLoading: false,
-            isUsingMockData: true,
-            lastFetchError: errorMessage,
-            error: null // Non mostrare errore all'utente, abbiamo i dati mock
-          });
+          set({ error: errorMessage, isLoading: false });
         }
-      },
-
-      // Forza un retry quando l'utente è tornato online
-      retryLoadProfessionisti: async () => {
-        const { loadProfessionisti } = get();
-        await loadProfessionisti(true);
       },
 
       loadUserProfile: async (userId: string) => {

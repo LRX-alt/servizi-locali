@@ -4,13 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { ArrowLeft, Plus, Edit, Trash2, MapPin, Phone, Clock, Save, X } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import type { ServizioPubblico } from '@/types';
 
 export default function AdminServiziPage() {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [dbLoading, setDbLoading] = useState(true);
+  const [dbEmpty, setDbEmpty] = useState(false); // "API restituisce 0 righe" (può essere DB vuoto o RLS)
+  const [dbError, setDbError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const [formData, setFormData] = useState<Omit<ServizioPubblico, 'id'>>({
     nome: '',
     tipo: 'altro',
@@ -88,7 +91,7 @@ export default function AdminServiziPage() {
 
     // Salva su DB
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
       const token = session?.access_token || undefined;
       await fetch('/api/servizi-pubblici/save', {
         method: 'POST',
@@ -103,7 +106,7 @@ export default function AdminServiziPage() {
       const newServizi = serviziPubblici.filter(s => s.id !== id);
       setServiziPubblici(newServizi);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
         const token = session?.access_token || undefined;
         await fetch('/api/servizi-pubblici/save', {
           method: 'POST',
@@ -128,17 +131,63 @@ export default function AdminServiziPage() {
   };
 
   useEffect(() => {
-    // Carica dal DB solo quando siamo sicuri che l'utente sia admin
-    if (isAuthenticated && isAdmin) {
-      (async () => {
-        try {
-          const res = await fetch('/api/servizi-pubblici/list');
-          const json = await res.json();
-          if (res.ok && Array.isArray(json.items)) setServiziPubblici(json.items);
-        } catch {}
-      })();
+    // Carica dal DB all'apertura
+    (async () => {
+      try {
+        const res = await fetch('/api/servizi-pubblici/list');
+        const json = await res.json();
+        if (res.ok && Array.isArray(json.items)) {
+          // Se il DB è vuoto ma abbiamo già dati locali, NON sovrascriverli con []
+          if (json.items.length === 0) {
+            setDbEmpty(true);
+            if (serviziPubblici.length === 0) {
+              setServiziPubblici([]);
+            }
+          } else {
+            setDbEmpty(false);
+            setServiziPubblici(json.items);
+          }
+        } else {
+          setDbError('Impossibile leggere i servizi dal database.');
+        }
+      } catch {
+        setDbError('Errore di rete durante il caricamento dei servizi.');
+      } finally {
+        setDbLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setServiziPubblici]);
+
+  const syncAllToDb = async () => {
+    setSyncing(true);
+    setDbError(null);
+    try {
+      const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+      const token = session?.access_token || undefined;
+      const res = await fetch('/api/servizi-pubblici/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ items: serviziPubblici })
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        setDbError(json?.error ? String(json.error) : 'Errore durante il salvataggio sul database.');
+        return;
+      }
+      // Dopo sync, ricarica dal DB per conferma
+      const listRes = await fetch('/api/servizi-pubblici/list');
+      const listJson = await listRes.json();
+      if (listRes.ok && Array.isArray(listJson.items)) {
+        setServiziPubblici(listJson.items);
+        setDbEmpty(listJson.items.length === 0);
+      }
+    } catch {
+      setDbError('Errore durante la sincronizzazione col database.');
+    } finally {
+      setSyncing(false);
     }
-  }, [setServiziPubblici, isAuthenticated, isAdmin]);
+  };
 
   // Mostra loading se non siamo ancora autenticati, 
   // o se siamo autenticati ma la verifica admin è in corso
@@ -178,6 +227,31 @@ export default function AdminServiziPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stato DB */}
+        {(dbLoading || dbEmpty || dbError) && (
+          <div className="mb-6 rounded-lg border bg-white p-4">
+            {dbLoading ? (
+              <div className="text-sm text-gray-700">Caricamento servizi dal database...</div>
+            ) : dbError ? (
+              <div className="text-sm text-red-700">{dbError}</div>
+            ) : dbEmpty ? (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="text-sm text-gray-700">
+                  L’API ha restituito <span className="font-semibold">0 servizi</span> da Supabase.
+                  Stai vedendo i dati locali (mock). Questo succede se il DB è vuoto <span className="font-semibold">oppure</span> se ci sono dati ma una policy RLS blocca la lettura.
+                </div>
+                <button
+                  onClick={syncAllToDb}
+                  disabled={syncing || serviziPubblici.length === 0}
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {syncing ? 'Sincronizzo...' : 'Sincronizza sul DB'}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )}
+
         {/* Form Modal */}
         {showForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -350,6 +424,11 @@ export default function AdminServiziPage() {
           </div>
           
           <div className="divide-y">
+            {serviziPubblici.length === 0 && (
+              <div className="p-6 text-sm text-gray-600">
+                Nessun servizio presente. Usa <span className="font-medium">Aggiungi Servizio</span> oppure sincronizza dati esistenti sul DB.
+              </div>
+            )}
             {serviziPubblici.map((servizio) => (
               <div key={servizio.id} className="p-6 hover:bg-gray-50">
                 <div className="flex items-start justify-between">

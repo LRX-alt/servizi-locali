@@ -1,53 +1,6 @@
 import { supabase } from './supabase';
 import type { Database } from './supabase';
 
-// Helper per retry con backoff esponenziale
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  maxRetries = 3,
-  baseDelayMs = 1000
-): Promise<T> {
-  let lastError: Error | null = null;
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      
-      // Non fare retry per errori di autenticazione o validazione
-      const isNonRetryable = lastError.message.includes('già') || 
-                            lastError.message.includes('already') ||
-                            lastError.message.includes('Invalid') ||
-                            lastError.message.includes('non valid');
-      
-      if (isNonRetryable || attempt === maxRetries - 1) {
-        throw lastError;
-      }
-      
-      // Backoff esponenziale: 1s, 2s, 4s...
-      const delay = baseDelayMs * Math.pow(2, attempt);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-  
-  throw lastError;
-}
-
-// Helper per timeout delle promesse
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs = 10000,
-  errorMessage = 'Timeout: operazione non completata'
-): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => 
-      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-    )
-  ]);
-}
-
 type Utente = Database['public']['Tables']['utenti']['Row'];
 type Professionista = Database['public']['Tables']['professionisti']['Row'];
 type Recensione = Database['public']['Tables']['recensioni']['Row'];
@@ -185,22 +138,16 @@ export const authHelpers = {
 
 // ===== PROFESSIONISTI =====
 export const professionistiHelpers = {
-  // Get all professionisti con retry e timeout
+  // Get all professionisti
   async getAllProfessionisti(): Promise<Professionista[]> {
-    return withRetry(async () => {
-      const { data, error } = await withTimeout(
-        supabase
-          .from('professionisti')
-          .select('*')
-          .eq('is_active', true)
-          .order('rating', { ascending: false }),
-        8000, // 8 secondi di timeout
-        'Timeout: Supabase non raggiungibile'
-      );
+    const { data, error } = await supabase
+      .from('professionisti')
+      .select('*')
+      .eq('is_active', true)
+      .order('rating', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
-    }, 2); // Max 2 tentativi
+    if (error) throw error;
+    return data || [];
   },
 
   // Eliminazione account professionista (solo dati applicativi)

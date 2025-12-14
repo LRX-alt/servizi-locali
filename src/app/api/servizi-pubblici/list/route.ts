@@ -2,7 +2,6 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { serviziPubblici } from '@/data/mockData';
 
 export async function GET() {
   try {
@@ -16,17 +15,15 @@ export async function GET() {
       .select('id, nome, tipo, indirizzo, lat, lng, telefono, orari, descrizione, ord')
       .order('ord', { ascending: true })
       .order('nome', { ascending: true });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // Fallback ai dati mock se Supabase non ha dati o fallisce
-    const rawData = error || !data || data.length === 0 ? serviziPubblici : data;
-
-    type Row = { id: string; nome: string; tipo: string; indirizzo: string; lat: number | null; lng: number | null; telefono: string | null; orari: string; descrizione: string | null; coordinate?: { lat: number; lng: number } };
-    const items = (rawData as Row[] | null || []).map((r) => ({
+    type Row = { id: string; nome: string; tipo: string; indirizzo: string; lat: number | null; lng: number | null; telefono: string | null; orari: string; descrizione: string | null };
+    const items = (data as Row[] | null || []).map((r) => ({
       id: String(r.id),
       nome: r.nome,
       tipo: r.tipo,
       indirizzo: r.indirizzo,
-      coordinate: r.coordinate || { lat: r.lat ?? null, lng: r.lng ?? null },
+      coordinate: { lat: r.lat ?? null, lng: r.lng ?? null },
       telefono: r.telefono ?? '',
       orari: r.orari,
       descrizione: r.descrizione ?? ''

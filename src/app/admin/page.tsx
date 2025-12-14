@@ -1,18 +1,44 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
-import { Shield, Users, MapPin, Building, Plus, Edit, Eye, ArrowLeft } from 'lucide-react';
-import ClientOnly from '@/components/ClientOnly';
 import { supabase } from '@/lib/supabase';
+import { Shield, Users, MapPin, Building, Plus, Edit, Eye, ArrowLeft } from 'lucide-react';
 
 export default function AdminPage() {
   const router = useRouter();
-  const { serviziPubblici, professionisti, isAdmin, isAuthenticated, logout } = useAppStore();
+  const {
+    serviziPubblici,
+    professionisti,
+    setServiziPubblici,
+    loadProfessionisti,
+    isAdmin,
+    isAuthenticated,
+    logout,
+  } = useAppStore();
 
   const [pendingApprovals, setPendingApprovals] = useState<number>(0);
 
+  // Carica contatori dal DB (servizi pubblici + professionisti) quando sei admin
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) return;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/servizi-pubblici/list');
+        const json = await res.json();
+        if (res.ok && Array.isArray(json.items)) setServiziPubblici(json.items);
+      } catch {}
+    })();
+
+    if (professionisti.length === 0) {
+      loadProfessionisti().catch(() => {});
+    }
+  }, [isAuthenticated, isAdmin, setServiziPubblici, loadProfessionisti, professionisti.length]);
+
+  // Conta recensioni pending (solo admin)
   useEffect(() => {
     if (!isAuthenticated || !isAdmin) return;
     const loadPending = async () => {
@@ -30,6 +56,27 @@ export default function AdminPage() {
     };
     loadPending();
   }, [isAuthenticated, isAdmin]);
+
+  // Controllo accesso admin (TEMPORANEAMENTE DISABILITATO PER DEBUG)
+  // if (!isAuthenticated || !isAdmin) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+  //         <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
+  //         <h1 className="text-2xl font-bold text-gray-900 mb-2">Accesso Negato</h1>
+  //         <p className="text-gray-600 mb-6">
+  //           Solo gli amministratori possono accedere a questa pagina.
+  //         </p>
+  //         <button
+  //           onClick={() => router.push('/')}
+  //           className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+  //         >
+  //           Torna alla Home
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // Controllo accesso admin
   if (!isAuthenticated || !isAdmin) {
@@ -55,12 +102,11 @@ export default function AdminPage() {
   const stats = {
     servizi: serviziPubblici.length,
     professionisti: professionisti.length,
-    totalUsers: 0, // Da implementare quando ci sarà il DB
-    pendingApprovals
+    totalUsers: 0,
+    pendingApprovals,
   };
 
   return (
-    <ClientOnly>
     <div className="min-h-screen bg-gray-50">
       {/* Header Admin */}
       <div className="bg-white shadow-sm border-b">
@@ -74,13 +120,13 @@ export default function AdminPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/dashboard')}
+              <Link
+                href="/"
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Torna alla Dashboard</span>
-              </button>
+                <span>Torna alla Home</span>
+              </Link>
               <button
                 onClick={logout}
                 className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
@@ -141,48 +187,48 @@ export default function AdminPage() {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Gestione Servizi</h3>
             <div className="space-y-3">
-              <a
+              <Link
                 href="/admin/servizi"
                 className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Aggiungi Servizio</span>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/admin/servizi"
                 className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
               >
                 <Edit className="w-4 h-4" />
                 <span>Gestisci Servizi</span>
-              </a>
+              </Link>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Gestione Professionisti</h3>
             <div className="space-y-3">
-              <a href="/admin/professionisti" className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors w-full">
+              <Link href="/admin/professionisti" className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors w-full">
                 <Users className="w-4 h-4" />
                 <span>Vedi Professionisti</span>
-              </a>
-              <a href="/admin/recensioni" className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors w-full">
+              </Link>
+              <Link href="/admin/recensioni" className="flex items-center space-x-2 bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors w-full">
                 <Shield className="w-4 h-4" />
                 <span>Approvazione Recensioni</span>
-              </a>
+              </Link>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Configurazione</h3>
             <div className="space-y-3">
-              <a href="/admin/zone" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors w-full">
+              <Link href="/admin/zone" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors w-full">
                 <MapPin className="w-4 h-4" />
                 <span>Gestisci Zone</span>
-              </a>
-              <a href="/admin/categorie" className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full">
+              </Link>
+              <Link href="/admin/categorie" className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full">
                 <Building className="w-4 h-4" />
                 <span>Categorie</span>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -198,6 +244,5 @@ export default function AdminPage() {
         </div>
       </div>
     </div>
-    </ClientOnly>
   );
 }
