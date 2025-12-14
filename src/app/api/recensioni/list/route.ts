@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     let isAdmin = false;
     if (!token) {
       // Dev bypass: consenti in sviluppo quando esplicitamente abilitato
-      if (process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true') {
+      if (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true') {
         isAdmin = true;
       } else {
         return NextResponse.json({ error: 'Token mancante' }, { status: 401 });

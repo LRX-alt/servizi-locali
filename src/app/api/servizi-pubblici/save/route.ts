@@ -14,12 +14,16 @@ export async function POST(req: Request) {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
     if (!supabaseUrl || !anonKey || !serviceKey) return NextResponse.json({ error: 'Config mancante' }, { status: 500 });
 
-    // Verifica admin (dev-bypass consentito se abilitato)
+    // Verifica admin (dev-bypass consentito solo in sviluppo)
     const authHeader = req.headers.get('authorization') || '';
     const token = authHeader.toLowerCase().startsWith('bearer ') ? authHeader.slice(7) : null;
     let isAdmin = false;
     if (!token) {
-      if (process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true') isAdmin = true; else return NextResponse.json({ error: 'Token mancante' }, { status: 401 });
+      if (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true') {
+        isAdmin = true;
+      } else {
+        return NextResponse.json({ error: 'Token mancante' }, { status: 401 });
+      }
     } else {
       const supabase = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false } });
       const { data: { user } } = await supabase.auth.getUser();

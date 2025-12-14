@@ -483,18 +483,11 @@ export const useAppStore = create<AppState>()(
           // Controllo utente admin di sviluppo (solo se abilitato via env)
           // ATTENZIONE: Questo è solo per sviluppo locale. In produzione usare
           // l'autenticazione Supabase con ruolo admin configurato via app_metadata.
-          const devAdminEnabled = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true';
+          const devAdminEnabled =
+            process.env.NODE_ENV !== 'production' &&
+            process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true';
           const devAdminEmail = process.env.NEXT_PUBLIC_DEV_ADMIN_EMAIL;
           const devAdminPassword = process.env.NEXT_PUBLIC_DEV_ADMIN_PASSWORD;
-
-          // Debug per verificare che le variabili siano lette
-          console.log('🔧 Admin check:', {
-            devAdminEnabled,
-            devAdminEmail,
-            devAdminPassword,
-            formEmail: form.email,
-            formPassword: form.password?.substring(0, 3) + '...' // nascondi password
-          });
 
           if (
             devAdminEnabled &&
@@ -503,13 +496,6 @@ export const useAppStore = create<AppState>()(
             form.email === devAdminEmail &&
             form.password === devAdminPassword
           ) {
-            // Log warning per sicurezza
-            if (typeof window !== 'undefined') {
-              console.warn(
-                '⚠️ Login admin di sviluppo attivo. NON usare in produzione!'
-              );
-            }
-            
             set({ 
               utente: {
                 id: 'dev_admin_user',

@@ -28,12 +28,9 @@ export default function AdminServiziPage() {
 
   // Controllo accesso admin
   useEffect(() => {
-    console.log('Admin servizi check:', { isAuthenticated, isAdmin });
-    
     // Solo redirect se siamo sicuri che l'utente non è admin
     // (evita redirect durante il caricamento iniziale)
     if (isAuthenticated && !isAdmin) {
-      console.log('Redirecting: authenticated but not admin');
       router.push('/admin');
     }
   }, [isAuthenticated, isAdmin, router]);

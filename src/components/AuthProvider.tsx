@@ -28,7 +28,10 @@ export default function AuthProvider({ children }: AuthProviderProps) {
             try { localStorage.removeItem('servizi-locali-storage'); } catch {}
           }
           // Se abbiamo un dev admin attivo nello store, non sovrascriviamo
-          const keepDevAdmin = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' && useAppStore.getState().isAdmin;
+          const keepDevAdmin =
+            process.env.NODE_ENV !== 'production' &&
+            process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' &&
+            useAppStore.getState().isAdmin;
           if (!keepDevAdmin) {
             useAppStore.setState({
               utente: null,
@@ -72,7 +75,10 @@ export default function AuthProvider({ children }: AuthProviderProps) {
           }
         } else {
           // Nessuna sessione
-          const keepDevAdmin = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' && useAppStore.getState().isAdmin;
+          const keepDevAdmin =
+            process.env.NODE_ENV !== 'production' &&
+            process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' &&
+            useAppStore.getState().isAdmin;
           if (!keepDevAdmin) {
             useAppStore.setState({
               utente: null,
@@ -94,7 +100,10 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     // Listener dei cambi di sessione
     const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
-        const keepDevAdmin = process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' && useAppStore.getState().isAdmin;
+        const keepDevAdmin =
+          process.env.NODE_ENV !== 'production' &&
+          process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' &&
+          useAppStore.getState().isAdmin;
         if (!keepDevAdmin) {
           useAppStore.setState({
             utente: null,

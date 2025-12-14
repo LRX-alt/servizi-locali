@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     let isAdmin = false;
     if (!token) {
-      if (process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true') {
+      if (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true') {
         isAdmin = true;
       } else {
         return NextResponse.json({ error: 'Token mancante' }, { status: 401 });
