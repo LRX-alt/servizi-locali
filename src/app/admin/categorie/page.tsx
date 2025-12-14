@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Plus, Edit3, Trash2 } from 'lucide-react';
+import type { Categoria } from '@/types';
 
 export default function AdminCategoriePage() {
   const router = useRouter();

@@ -9,6 +9,7 @@ import StickyAuthBanner from '@/components/StickyAuthBanner';
 import SearchBarServizi from '@/components/SearchBarServizi';
 import ComuniListServizi from '@/components/ComuniListServizi';
 import TipoServiziGrid from '@/components/TipoServiziGrid';
+import type { ServizioPubblico } from '@/types';
 
 export default function ServiziPubbliciPage() {
   const router = useRouter();
