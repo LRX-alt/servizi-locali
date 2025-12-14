@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,7 +13,43 @@ import RegisterProfessionistaModal from './RegisterProfessionistaModal';
 import AuthTypeSelector from './AuthTypeSelector';
 import NotificationModal from './NotificationModal';
 
-export default function Header() {
+// Componente interno che gestisce i searchParams
+function SearchParamsHandler({ 
+  onShowAuthTypeSelector 
+}: { 
+  onShowAuthTypeSelector: () => void 
+}) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { isAuthenticated } = useAppStore();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasMounted) return;
+    const login = searchParams.get('login');
+    if (login === '1' && !isAuthenticated) {
+      onShowAuthTypeSelector();
+      // pulizia query param
+      const params = new URLSearchParams(searchParams);
+      params.delete('login');
+      router.replace(`?${params.toString()}`);
+    }
+  }, [hasMounted, searchParams, isAuthenticated, router, onShowAuthTypeSelector]);
+
+  return null;
+}
+
+function HeaderContent({ 
+  showAuthTypeSelector, 
+  setShowAuthTypeSelector 
+}: { 
+  showAuthTypeSelector: boolean; 
+  setShowAuthTypeSelector: (show: boolean) => void;
+}) {
   const {
     utente,
     professionistaLoggato,
@@ -23,11 +59,9 @@ export default function Header() {
     isAdmin
   } = useAppStore();
 
-  const searchParams = useSearchParams();
   const router = useRouter();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showAuthTypeSelector, setShowAuthTypeSelector] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLoginProfessionistaModal, setShowLoginProfessionistaModal] = useState(false);
@@ -39,19 +73,6 @@ export default function Header() {
   useEffect(() => {
     setHasMounted(true);
   }, []);
-
-  // Apri selettore auth da query param ?login=1
-  useEffect(() => {
-    if (!hasMounted) return;
-    const login = searchParams.get('login');
-    if (login === '1' && !isAuthenticated) {
-      setShowAuthTypeSelector(true);
-      // pulizia query param
-      const params = new URLSearchParams(searchParams);
-      params.delete('login');
-      router.replace(`?${params.toString()}`);
-    }
-  }, [hasMounted, searchParams, isAuthenticated, router]);
 
   const handleLogout = async () => {
     try {
@@ -331,4 +352,20 @@ export default function Header() {
       />
     </>
   );
-} 
+}
+
+export default function Header() {
+  const [showAuthTypeSelector, setShowAuthTypeSelector] = useState(false);
+
+  return (
+    <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler onShowAuthTypeSelector={() => setShowAuthTypeSelector(true)} />
+      </Suspense>
+      <HeaderContent 
+        showAuthTypeSelector={showAuthTypeSelector} 
+        setShowAuthTypeSelector={setShowAuthTypeSelector} 
+      />
+    </>
+  );
+}
