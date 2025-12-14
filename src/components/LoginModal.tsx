@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { LoginForm } from '@/types';
+import { authHelpers } from '@/lib/supabase-helpers';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -19,11 +20,14 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
   const modalRef = useRef<HTMLDivElement | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setResetMessage('');
     setIsSubmitting(true);
 
     try {
@@ -48,9 +52,34 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
     }
   };
 
+  const handleForgotPassword = async () => {
+    setError('');
+    setResetMessage('');
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      setError('Inserisci un\'email valida per recuperare la password');
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const redirectTo = `${window.location.origin}/reset-password`;
+      await authHelpers.requestPasswordReset(form.email, redirectTo);
+      // Non rivelare se l'email esiste o meno (best practice)
+      setResetMessage('Se l’email è registrata, riceverai a breve un link per reimpostare la password.');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Errore durante il recupero password';
+      setError(message);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const handleInputChange = (field: keyof LoginForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
     if (errorMessage) setError('');
+    if (resetMessage) setResetMessage('');
   };
 
   // Gestione focus iniziale, ESC e focus trap (hook sempre dichiarato)
@@ -106,6 +135,12 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
           {errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm" role="alert" aria-live="assertive" id="login-error">
               {errorMessage}
+            </div>
+          )}
+
+          {resetMessage && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-md text-sm" role="status" aria-live="polite">
+              {resetMessage}
             </div>
           )}
 
@@ -168,16 +203,18 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
             </label>
             <button
               type="button"
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-sm text-blue-600 hover:text-blue-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleForgotPassword}
+              disabled={isSubmitting || isResetting}
             >
-              Password dimenticata?
+              {isResetting ? 'Invio in corso…' : 'Password dimenticata?'}
             </button>
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer"
           >
             {isSubmitting ? 'Accesso in corso...' : 'Accedi'}
           </button>
@@ -188,7 +225,7 @@ export default function LoginModal({ isOpen, onClose, onLogin, onSwitchToRegiste
               <button
                 type="button"
                 onClick={onSwitchToRegister}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+                className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
               >
                 Registrati
               </button>

@@ -646,17 +646,23 @@ export const useAppStore = create<AppState>()(
       },
 
       logout: async () => {
+        // Pulizia locale SEMPRE (anche se Supabase signOut fallisce)
+        set({
+          utente: null,
+          professionistaLoggato: null,
+          userType: null,
+          isAuthenticated: false,
+          isAdmin: false
+        });
         try {
           await authHelpers.logout();
-          set({ 
-            utente: null, 
-            professionistaLoggato: null,
-            userType: null,
-            isAuthenticated: false,
-            isAdmin: false
-          });
         } catch (error: unknown) {
+          // Non bloccare il logout UI: logga e continua
           console.error('Logout error:', error);
+        } finally {
+          // Best-effort: pulisci eventuale persistenza client
+          try { localStorage.removeItem('supabase.auth.token'); } catch {}
+          try { localStorage.removeItem('servizi-locali-storage'); } catch {}
         }
       },
 

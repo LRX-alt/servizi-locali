@@ -27,7 +27,10 @@ export default function AdminPage() {
 
     (async () => {
       try {
-        const res = await fetch('/api/servizi-pubblici/list');
+        const res = await fetch('/api/servizi-pubblici/list', {
+          cache: 'no-store',
+          headers: { 'x-admin-bypass-cache': '1' },
+        });
         const json = await res.json();
         if (res.ok && Array.isArray(json.items)) setServiziPubblici(json.items);
       } catch {}

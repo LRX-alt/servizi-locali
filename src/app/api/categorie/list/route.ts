@@ -1,3 +1,5 @@
+'use server';
+
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -9,30 +11,17 @@ export async function GET(req: Request) {
 
     const supabase = createClient(supabaseUrl, anonKey);
     const { data, error } = await supabase
-      .from('servizi_pubblici')
-      .select('id, nome, tipo, indirizzo, lat, lng, telefono, orari, descrizione, ord')
+      .from('categorie')
+      .select('id, nome, icona, descrizione, ord')
       .order('ord', { ascending: true })
       .order('nome', { ascending: true });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    type Row = { id: string; nome: string; tipo: string; indirizzo: string; lat: number | null; lng: number | null; telefono: string | null; orari: string; descrizione: string | null };
-    const items = (data as Row[] | null || []).map((r) => ({
-      id: String(r.id),
-      nome: r.nome,
-      tipo: r.tipo,
-      indirizzo: r.indirizzo,
-      coordinate: { lat: r.lat ?? null, lng: r.lng ?? null },
-      telefono: r.telefono ?? '',
-      orari: r.orari,
-      descrizione: r.descrizione ?? ''
-    }));
-
-    // Di default possiamo cacheare per la pagina pubblica, ma per l'admin vogliamo sempre dati freschi.
     const bypassCache =
       req.headers.get('x-admin-bypass-cache') === '1' ||
       Boolean(req.headers.get('authorization'));
 
-    return NextResponse.json({ items }, {
+    return NextResponse.json({ items: data || [] }, {
       headers: bypassCache
         ? {
             'Cache-Control': 'private, no-store, max-age=0',

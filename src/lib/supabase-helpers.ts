@@ -97,6 +97,15 @@ export const authHelpers = {
     return data;
   },
 
+  // Richiesta reset password (invia email di recupero)
+  async requestPasswordReset(email: string, redirectTo?: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, redirectTo ? { redirectTo } : undefined);
+    if (error) {
+      throw new Error('Impossibile inviare l’email di recupero password. Riprova più tardi.');
+    }
+    return { success: true };
+  },
+
   // Logout
   async logout() {
     const { error } = await supabase.auth.signOut();

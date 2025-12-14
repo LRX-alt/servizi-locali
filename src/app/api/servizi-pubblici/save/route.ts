@@ -1,5 +1,3 @@
-'use server';
-
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -52,8 +50,27 @@ export async function POST(req: Request) {
       ord: typeof it.ord === 'number' ? it.ord : idx
     }));
 
-    const { error } = await admin.from('servizi_pubblici').upsert(sanitized, { onConflict: 'id' });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Rende il DB coerente con la lista inviata:
+    // - upsert degli elementi presenti
+    // - delete degli elementi che non sono più presenti (es. eliminati da admin)
+    const { error: upsertErr } = await admin.from('servizi_pubblici').upsert(sanitized, { onConflict: 'id' });
+    if (upsertErr) return NextResponse.json({ error: upsertErr.message }, { status: 500 });
+
+    // Calcola quali record eliminare (evita filtri not/in con stringhe e potenziali problemi di casting)
+    const { data: existing, error: listErr } = await admin
+      .from('servizi_pubblici')
+      .select('id');
+    if (listErr) return NextResponse.json({ error: listErr.message }, { status: 500 });
+
+    const incoming = new Set(sanitized.map((s) => String(s.id)));
+    const toDelete = (existing as Array<{ id: unknown }> | null || [])
+      .map((r) => String(r.id))
+      .filter((id) => !incoming.has(id));
+
+    if (toDelete.length > 0) {
+      const { error: delErr } = await admin.from('servizi_pubblici').delete().in('id', toDelete);
+      if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (e: unknown) {

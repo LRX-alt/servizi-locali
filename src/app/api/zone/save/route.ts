@@ -37,8 +37,22 @@ export async function POST(req: Request) {
       ord: typeof it.ord === 'number' ? it.ord : idx
     }));
 
-    const { error } = await admin.from('zone').upsert(sanitized, { onConflict: 'id' });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Rende il DB coerente con la lista inviata (upsert + delete dei mancanti)
+    const { error: upsertErr } = await admin.from('zone').upsert(sanitized, { onConflict: 'id' });
+    if (upsertErr) return NextResponse.json({ error: upsertErr.message }, { status: 500 });
+
+    const { data: existing, error: listErr } = await admin.from('zone').select('id');
+    if (listErr) return NextResponse.json({ error: listErr.message }, { status: 500 });
+
+    const incoming = new Set(sanitized.map((z) => String(z.id)));
+    const toDelete = (existing as Array<{ id: unknown }> | null || [])
+      .map((r) => String(r.id))
+      .filter((id) => !incoming.has(id));
+
+    if (toDelete.length > 0) {
+      const { error: delErr } = await admin.from('zone').delete().in('id', toDelete);
+      if (delErr) return NextResponse.json({ error: delErr.message }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (e: unknown) {

@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import "./globals.css";
 import Header from "@/components/Header";
-import { Suspense } from "react";
 import ToastContainer from "@/components/ToastContainer";
 import AuthProvider from "@/components/AuthProvider";
 
@@ -106,12 +105,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <AuthProvider>
           <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Suspense fallback={null}>
-              <Header />
-            </Suspense>
+            <Header />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 sm:pt-2 pb-8 flex-1">
               {children}
             </main>

@@ -1,10 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { ArrowLeft, Plus, Edit, Trash2, MapPin, Phone, Clock, Save, X } from 'lucide-react';
 import type { ServizioPubblico } from '@/types';
+
+const TIPO_ICON: Record<string, string> = {
+  comune: '🏛️',
+  poste: '📮',
+  farmacia: '💊',
+  banca: '🏦',
+  ospedale: '🏥',
+  ufficio: '🏢',
+  altro: '🏪',
+};
+
+function getTipoIcon(tipo: string) {
+  return TIPO_ICON[tipo] || '🏢';
+}
 
 export default function AdminServiziPage() {
   const router = useRouter();
@@ -35,7 +49,7 @@ export default function AdminServiziPage() {
     }
   }, [isAuthenticated, isAdmin, router]);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       nome: '',
       tipo: 'altro',
@@ -47,9 +61,9 @@ export default function AdminServiziPage() {
     });
     setEditingId(null);
     setShowForm(false);
-  };
+  }, []);
 
-  const handleEdit = (servizio: ServizioPubblico) => {
+  const handleEdit = useCallback((servizio: ServizioPubblico) => {
     setFormData({
       nome: servizio.nome,
       tipo: servizio.tipo,
@@ -61,7 +75,7 @@ export default function AdminServiziPage() {
     });
     setEditingId(servizio.id);
     setShowForm(true);
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!formData.nome || !formData.indirizzo || !formData.orari) {
@@ -85,53 +99,118 @@ export default function AdminServiziPage() {
 
     setServiziPubblici(newServizi);
     resetForm();
+    setDbError(null);
 
     // Salva su DB
     try {
       const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
       const token = session?.access_token || undefined;
-      await fetch('/api/servizi-pubblici/save', {
+      const res = await fetch('/api/servizi-pubblici/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ items: newServizi })
       });
-    } catch {}
+      if (!res.ok) {
+        const json = await res.json().catch(() => null) as { error?: unknown } | null;
+        setDbError(json?.error ? String(json.error) : 'Errore durante il salvataggio sul database.');
+      }
+    } catch {
+      setDbError('Errore di rete durante il salvataggio sul database.');
+    }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (confirm('Sei sicuro di voler eliminare questo servizio?')) {
       const newServizi = serviziPubblici.filter(s => s.id !== id);
       setServiziPubblici(newServizi);
+      setDbError(null);
       try {
         const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
         const token = session?.access_token || undefined;
-        await fetch('/api/servizi-pubblici/save', {
+        const res = await fetch('/api/servizi-pubblici/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
           body: JSON.stringify({ items: newServizi })
         });
-      } catch {}
+        if (!res.ok) {
+          const json = await res.json().catch(() => null) as { error?: unknown } | null;
+          setDbError(json?.error ? String(json.error) : 'Errore durante il salvataggio sul database.');
+          // Ricarica dal DB per ripristinare uno stato coerente
+          const listRes = await fetch('/api/servizi-pubblici/list', {
+            cache: 'no-store',
+            headers: { 'x-admin-bypass-cache': '1' },
+          });
+          const listJson = await listRes.json().catch(() => null) as { items?: unknown } | null;
+          if (listRes.ok && listJson && Array.isArray((listJson as any).items)) {
+            setServiziPubblici((listJson as any).items);
+            setDbEmpty(((listJson as any).items as unknown[]).length === 0);
+          }
+        }
+      } catch {
+        setDbError('Errore di rete durante il salvataggio sul database.');
+      }
     }
-  };
+  }, [serviziPubblici, setServiziPubblici]);
 
-  const getTipoIcon = (tipo: string) => {
-    const icons = {
-      comune: '🏛️',
-      poste: '📮',
-      farmacia: '💊',
-      banca: '🏦',
-      ospedale: '🏥',
-      ufficio: '🏢',
-      altro: '🏪'
-    };
-    return icons[tipo as keyof typeof icons] || '🏢';
-  };
+  // Memoizza la lista: mentre digiti nel form (formData cambia), evitiamo di rimappare 35+ card
+  const serviziRows = useMemo(() => {
+    return serviziPubblici.map((servizio) => (
+      <div key={servizio.id} className="p-6 hover:bg-gray-50">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-2">
+              <span className="text-2xl">{getTipoIcon(servizio.tipo)}</span>
+              <div>
+                <h3 className="font-semibold text-gray-900">{servizio.nome}</h3>
+                <p className="text-sm text-gray-600 capitalize">{servizio.tipo}</p>
+              </div>
+            </div>
+
+            <div className="space-y-1 text-sm text-gray-600">
+              <div className="flex items-center space-x-2">
+                <MapPin className="w-4 h-4" />
+                <span>{servizio.indirizzo}</span>
+              </div>
+              {servizio.telefono && (
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4" />
+                  <span>{servizio.telefono}</span>
+                </div>
+              )}
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span>{servizio.orari}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex space-x-2 ml-4">
+            <button
+              onClick={() => handleEdit(servizio)}
+              className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handleDelete(servizio.id)}
+              className="bg-red-600 text-white p-2 rounded-md hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    ));
+  }, [serviziPubblici, handleEdit, handleDelete]);
 
   useEffect(() => {
     // Carica dal DB all'apertura
     (async () => {
       try {
-        const res = await fetch('/api/servizi-pubblici/list');
+        const res = await fetch('/api/servizi-pubblici/list', {
+          cache: 'no-store',
+          headers: { 'x-admin-bypass-cache': '1' },
+        });
         const json = await res.json();
         if (res.ok && Array.isArray(json.items)) {
           // Se il DB è vuoto ma abbiamo già dati locali, NON sovrascriverli con []
@@ -173,7 +252,10 @@ export default function AdminServiziPage() {
         return;
       }
       // Dopo sync, ricarica dal DB per conferma
-      const listRes = await fetch('/api/servizi-pubblici/list');
+      const listRes = await fetch('/api/servizi-pubblici/list', {
+        cache: 'no-store',
+        headers: { 'x-admin-bypass-cache': '1' },
+      });
       const listJson = await listRes.json();
       if (listRes.ok && Array.isArray(listJson.items)) {
         setServiziPubblici(listJson.items);
@@ -426,53 +508,7 @@ export default function AdminServiziPage() {
                 Nessun servizio presente. Usa <span className="font-medium">Aggiungi Servizio</span> oppure sincronizza dati esistenti sul DB.
               </div>
             )}
-            {serviziPubblici.map((servizio) => (
-              <div key={servizio.id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <span className="text-2xl">{getTipoIcon(servizio.tipo)}</span>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{servizio.nome}</h3>
-                        <p className="text-sm text-gray-600 capitalize">{servizio.tipo}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-4 h-4" />
-                        <span>{servizio.indirizzo}</span>
-                      </div>
-                      {servizio.telefono && (
-                        <div className="flex items-center space-x-2">
-                          <Phone className="w-4 h-4" />
-                          <span>{servizio.telefono}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4" />
-                        <span>{servizio.orari}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex space-x-2 ml-4">
-                    <button
-                      onClick={() => handleEdit(servizio)}
-                      className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(servizio.id)}
-                      className="bg-red-600 text-white p-2 rounded-md hover:bg-red-700 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {serviziRows}
           </div>
         </div>
       </div>

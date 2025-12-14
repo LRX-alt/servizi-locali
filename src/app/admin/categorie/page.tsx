@@ -11,6 +11,8 @@ export default function AdminCategoriePage() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ nome: '', icona: '🔧', descrizione: '' });
+  const [dbLoading, setDbLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && !isAdmin) router.push('/admin');
@@ -20,10 +22,23 @@ export default function AdminCategoriePage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/categorie/list');
-        const json = await res.json();
-        if (res.ok && Array.isArray(json.items)) setCategorie(json.items);
-      } catch {}
+        setDbLoading(true);
+        setDbError(null);
+        const res = await fetch('/api/categorie/list', {
+          cache: 'no-store',
+          headers: { 'x-admin-bypass-cache': '1' },
+        });
+        const json = await res.json().catch(() => null) as { items?: unknown; error?: unknown } | null;
+        if (!res.ok) {
+          setDbError(json?.error ? String(json.error) : 'Impossibile leggere le categorie dal database.');
+          return;
+        }
+        if (json && Array.isArray((json as any).items)) setCategorie((json as any).items);
+      } catch {
+        setDbError('Errore di rete durante il caricamento delle categorie.');
+      } finally {
+        setDbLoading(false);
+      }
     })();
   }, [setCategorie]);
 
@@ -34,8 +49,15 @@ export default function AdminCategoriePage() {
       try {
         const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
         const token = session?.access_token || undefined;
-        await fetch('/api/categorie/save', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ items: next }) });
-      } catch {}
+        setDbError(null);
+        const res = await fetch('/api/categorie/save', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ items: next }) });
+        if (!res.ok) {
+          const json = await res.json().catch(() => null) as { error?: unknown } | null;
+          setDbError(json?.error ? String(json.error) : 'Errore durante il salvataggio sul database.');
+        }
+      } catch {
+        setDbError('Errore di rete durante il salvataggio sul database.');
+      }
     })();
   };
 
@@ -95,6 +117,15 @@ export default function AdminCategoriePage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
+        {(dbLoading || dbError) && (
+          <div className="mb-4 rounded-lg border bg-white p-4">
+            {dbLoading ? (
+              <div className="text-sm text-gray-700">Caricamento categorie dal database...</div>
+            ) : dbError ? (
+              <div className="text-sm text-red-700">{dbError}</div>
+            ) : null}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categorie.map(cat => (
             <div key={cat.id} className="bg-white border rounded-md p-4">

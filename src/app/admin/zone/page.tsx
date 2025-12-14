@@ -10,10 +10,38 @@ export default function AdminZonePage() {
   const { isAuthenticated, isAdmin } = useAppStore();
   const [zone, setZone] = useState<{ id: string; nome: string }[]>([]);
   const [newZona, setNewZona] = useState('');
+  const [dbLoading, setDbLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && !isAdmin) router.push('/admin');
   }, [isAuthenticated, isAdmin, router]);
+
+  // Carica dal DB all'apertura (così dopo refresh non perdi i dati)
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) return;
+    (async () => {
+      setDbLoading(true);
+      setDbError(null);
+      try {
+        const res = await fetch('/api/zone/list', {
+          cache: 'no-store',
+          headers: { 'x-admin-bypass-cache': '1' },
+        });
+        const json = await res.json().catch(() => null) as { items?: unknown; error?: unknown } | null;
+        if (!res.ok) {
+          setDbError(json?.error ? String(json.error) : 'Impossibile leggere le zone dal database.');
+          return;
+        }
+        const items = (json && Array.isArray((json as any).items)) ? (json as any).items : [];
+        setZone((items as any[]).map((r) => ({ id: String(r.id), nome: String(r.nome) })));
+      } catch {
+        setDbError('Errore di rete durante il caricamento delle zone.');
+      } finally {
+        setDbLoading(false);
+      }
+    })();
+  }, [isAuthenticated, isAdmin]);
 
   const persist = (z: string[]) => {
     setZone(z.map((nome) => ({ id: nome.toLowerCase().replace(/\s+/g, '-'), nome })));
@@ -21,8 +49,21 @@ export default function AdminZonePage() {
     (async () => {
       const payload = z.map((nome, ord) => ({ id: nome.toLowerCase().replace(/\s+/g, '-'), nome, ord }));
       try {
-        await fetch('/api/zone/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: payload }) });
-      } catch {}
+        setDbError(null);
+        const { data: { session } } = await (await import('@/lib/supabase')).supabase.auth.getSession();
+        const token = session?.access_token || undefined;
+        const res = await fetch('/api/zone/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ items: payload })
+        });
+        if (!res.ok) {
+          const json = await res.json().catch(() => null) as { error?: unknown } | null;
+          setDbError(json?.error ? String(json.error) : 'Errore durante il salvataggio sul database.');
+        }
+      } catch {
+        setDbError('Errore di rete durante il salvataggio sul database.');
+      }
     })();
   };
 
@@ -65,6 +106,15 @@ export default function AdminZonePage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
+        {(dbLoading || dbError) && (
+          <div className="mb-4 rounded-lg border bg-white p-4">
+            {dbLoading ? (
+              <div className="text-sm text-gray-700">Caricamento zone dal database...</div>
+            ) : dbError ? (
+              <div className="text-sm text-red-700">{dbError}</div>
+            ) : null}
+          </div>
+        )}
         <div className="bg-white border rounded-md">
           <div className="p-4 border-b text-gray-900 font-semibold">Zone ({zone.length})</div>
           <div className="divide-y">

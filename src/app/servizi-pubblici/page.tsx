@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppStore } from '@/store';
-import { serviziPubblici } from '@/data/mockData';
 import { MapPin, Phone, Clock, Navigation } from 'lucide-react';
 import AuthHeroCardServizi from '@/components/AuthHeroCardServizi';
 import StickyAuthBanner from '@/components/StickyAuthBanner';
@@ -28,7 +27,18 @@ export default function ServiziPubbliciPage() {
   }, []);
 
   useEffect(() => {
-    setServiziPubblici(serviziPubblici);
+    // Carica dal DB (con fallback ai dati locali già presenti nello store)
+    (async () => {
+      try {
+        const res = await fetch('/api/servizi-pubblici/list', { cache: 'no-store' });
+        const json = await res.json().catch(() => null) as { items?: unknown };
+        if (res.ok && json && Array.isArray((json as any).items)) {
+          setServiziPubblici((json as any).items);
+        }
+      } catch {
+        // no-op: mantieni eventuali dati locali
+      }
+    })();
   }, [setServiziPubblici]);
 
   const handleNavigation = (indirizzo: string) => {
