@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { useAppStore } from '@/store';
@@ -12,6 +13,7 @@ import StickyAuthBanner from '@/components/StickyAuthBanner';
 import ProfessionistaCardSkeleton from '@/components/ProfessionistaCardSkeleton';
 
 export default function HomePage() {
+  const router = useRouter();
   const {
     professionistiFiltrati,
     isLoading,
@@ -22,7 +24,16 @@ export default function HomePage() {
     isAuthenticated
   } = useAppStore();
   
-
+  // Intercetta link di reset password che Supabase reindirizza alla home
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash && hash.includes('type=recovery')) {
+        // Reindirizza a /reset-password con l'hash intatto
+        router.replace(`/reset-password${hash}`);
+      }
+    }
+  }, [router]);
 
   const { ref, inView } = useInView({
     threshold: 0,
