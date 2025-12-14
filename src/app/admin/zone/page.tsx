@@ -28,13 +28,13 @@ export default function AdminZonePage() {
           cache: 'no-store',
           headers: { 'x-admin-bypass-cache': '1' },
         });
-        const json = await res.json().catch(() => null) as { items?: unknown; error?: unknown } | null;
+        const json = await res.json().catch(() => null) as { items?: Array<{ id: string; nome: string }>; error?: string } | null;
         if (!res.ok) {
-          setDbError(json?.error ? String(json.error) : 'Impossibile leggere le zone dal database.');
+          setDbError(json?.error ?? 'Impossibile leggere le zone dal database.');
           return;
         }
-        const items = (json && Array.isArray((json as any).items)) ? (json as any).items : [];
-        setZone((items as any[]).map((r) => ({ id: String(r.id), nome: String(r.nome) })));
+        const items = json?.items && Array.isArray(json.items) ? json.items : [];
+        setZone(items.map((r) => ({ id: String(r.id), nome: String(r.nome) })));
       } catch {
         setDbError('Errore di rete durante il caricamento delle zone.');
       } finally {

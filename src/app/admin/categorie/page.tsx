@@ -28,12 +28,12 @@ export default function AdminCategoriePage() {
           cache: 'no-store',
           headers: { 'x-admin-bypass-cache': '1' },
         });
-        const json = await res.json().catch(() => null) as { items?: unknown; error?: unknown } | null;
+        const json = await res.json().catch(() => null) as { items?: Categoria[]; error?: string } | null;
         if (!res.ok) {
-          setDbError(json?.error ? String(json.error) : 'Impossibile leggere le categorie dal database.');
+          setDbError(json?.error ?? 'Impossibile leggere le categorie dal database.');
           return;
         }
-        if (json && Array.isArray((json as any).items)) setCategorie((json as any).items);
+        if (json?.items && Array.isArray(json.items)) setCategorie(json.items);
       } catch {
         setDbError('Errore di rete durante il caricamento delle categorie.');
       } finally {

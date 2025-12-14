@@ -140,10 +140,10 @@ export default function AdminServiziPage() {
             cache: 'no-store',
             headers: { 'x-admin-bypass-cache': '1' },
           });
-          const listJson = await listRes.json().catch(() => null) as { items?: unknown } | null;
-          if (listRes.ok && listJson && Array.isArray((listJson as any).items)) {
-            setServiziPubblici((listJson as any).items);
-            setDbEmpty(((listJson as any).items as unknown[]).length === 0);
+          const listJson = await listRes.json().catch(() => null) as { items?: ServizioPubblico[] } | null;
+          if (listRes.ok && listJson?.items && Array.isArray(listJson.items)) {
+            setServiziPubblici(listJson.items);
+            setDbEmpty(listJson.items.length === 0);
           }
         }
       } catch {

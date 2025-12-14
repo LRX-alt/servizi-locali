@@ -31,9 +31,9 @@ export default function ServiziPubbliciPage() {
     (async () => {
       try {
         const res = await fetch('/api/servizi-pubblici/list', { cache: 'no-store' });
-        const json = await res.json().catch(() => null) as { items?: unknown };
-        if (res.ok && json && Array.isArray((json as any).items)) {
-          setServiziPubblici((json as any).items);
+        const json = await res.json().catch(() => null) as { items?: ServizioPubblico[] } | null;
+        if (res.ok && json?.items && Array.isArray(json.items)) {
+          setServiziPubblici(json.items);
         }
       } catch {
         // no-op: mantieni eventuali dati locali
