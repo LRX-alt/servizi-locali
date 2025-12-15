@@ -30,3 +30,15 @@ body {
   user-select: none;
   pointer-events: none;
 }
+
+/* Cursor pointer per tutti i link e pulsanti */
+button,
+a,
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+a[aria-disabled="true"] {
+  cursor: not-allowed;
+}
