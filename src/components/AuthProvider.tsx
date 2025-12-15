@@ -8,6 +8,20 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+// Funzione helper per verificare se siamo in un flusso di recovery
+function isRecoveryFlow(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  // Controlla pathname
+  if (window.location.pathname === '/reset-password') return true;
+  
+  // Controlla hash per token di recovery
+  const hash = window.location.hash;
+  if (hash && hash.includes('type=recovery')) return true;
+  
+  return false;
+}
+
 export default function AuthProvider({ children }: AuthProviderProps) {
   const initializedRef = useRef(false);
 
@@ -17,6 +31,21 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
     const initializeSession = async () => {
       try {
+        // Non caricare il profilo se siamo in un flusso di recovery
+        // La sessione di recovery non deve essere trattata come un login normale
+        if (isRecoveryFlow()) {
+          console.log('[AuthProvider] Flusso recovery rilevato, skip caricamento profilo');
+          // Pulisci lo stato per non mostrare l'utente come loggato
+          useAppStore.setState({
+            utente: null,
+            professionistaLoggato: null,
+            userType: null,
+            isAuthenticated: false,
+            isAdmin: false,
+          });
+          return;
+        }
+
         // Usa getSession per evitare errori di refresh non gestiti
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -99,6 +128,12 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
     // Listener dei cambi di sessione
     const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Ignora eventi durante il flusso di recovery per non interferire
+      if (isRecoveryFlow()) {
+        console.log('[AuthProvider] Evento auth durante flusso recovery, ignorato');
+        return;
+      }
+
       if (event === 'SIGNED_OUT' || !session) {
         const keepDevAdmin =
           process.env.NODE_ENV !== 'production' &&

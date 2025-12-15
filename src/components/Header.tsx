@@ -112,9 +112,41 @@ function HeaderContent({
     }
   };
 
-  // Evita qualsiasi mismatch SSR/CSR: renderizza l'header solo dopo il mount client
-  // (MA dopo aver chiamato tutti gli hook, per non violare le Rules of Hooks)
-  if (!hasMounted) return null;
+  // Renderizza un header skeleton durante l'hydration per evitare mismatch SSR/CSR
+  if (!hasMounted) {
+    return (
+      <header className="bg-white shadow-sm border-b border-gray-200 pt-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="flex items-center space-x-2 pt-1">
+              <Image
+                src="/logo_servizi-locali.png"
+                alt="Servizi Locali"
+                width={80}
+                height={80}
+                className="h-20 w-auto scale-[1.7] origin-left"
+              />
+            </Link>
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-gray-700 hover:text-gray-900 font-medium">
+                Home
+              </Link>
+              <Link href="/servizi-pubblici" className="text-gray-700 hover:text-gray-900 font-medium">
+                Servizi Pubblici
+              </Link>
+            </nav>
+            <div className="hidden md:flex items-center space-x-4">
+              {/* Placeholder per evitare layout shift */}
+              <div className="h-10 w-20"></div>
+            </div>
+            <div className="md:hidden p-2">
+              <Menu className="w-6 h-6 text-gray-400" />
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>

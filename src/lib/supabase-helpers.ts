@@ -99,10 +99,17 @@ export const authHelpers = {
 
   // Richiesta reset password (invia email di recupero)
   async requestPasswordReset(email: string, redirectTo?: string) {
+    console.log('[Reset Password] Tentativo invio email a:', email, 'redirectTo:', redirectTo);
     const { error } = await supabase.auth.resetPasswordForEmail(email, redirectTo ? { redirectTo } : undefined);
     if (error) {
-      throw new Error('Impossibile inviare l’email di recupero password. Riprova più tardi.');
+      console.error('[Reset Password] Errore Supabase:', error.message, error);
+      // Mostra errore specifico per rate limiting
+      if (error.message?.toLowerCase().includes('rate limit') || error.status === 429) {
+        throw new Error('Troppe richieste. Attendi qualche minuto prima di riprovare.');
+      }
+      throw new Error('Impossibile inviare l\'email di recupero password. Riprova più tardi.');
     }
+    console.log('[Reset Password] Email inviata con successo');
     return { success: true };
   },
 
