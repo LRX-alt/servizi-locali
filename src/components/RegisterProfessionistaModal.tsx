@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { X, User, Mail, Lock, Phone, MapPin, Building2, FileText, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, User, Mail, Lock, Phone, MapPin, Building2, FileText, Eye, EyeOff, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { useAppStore } from '@/store';
+import RichiediCategoriaModal from './RichiediCategoriaModal';
+import type { Categoria } from '@/types';
 
 interface RegisterProfessionistaModalProps {
   isOpen: boolean;
@@ -41,17 +44,55 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
     zona_servizio: false,
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showRichiediCategoria, setShowRichiediCategoria] = useState(false);
+  const [categorieCaricate, setCategorieCaricate] = useState<Categoria[]>([]);
+  const [loadingCategorie, setLoadingCategorie] = useState(true);
+  const { categorie } = useAppStore();
 
-  const categorieServizi = [
-    'Idraulico',
-    'Elettricista',
-    'Giardiniere',
-    'Pulizie',
-    'Traslochi',
-    'Ristrutturazioni',
-    'Informatica',
-    'Altro'
-  ];
+  // Carica categorie dal database
+  useEffect(() => {
+    const loadCategorie = async () => {
+      try {
+        setLoadingCategorie(true);
+        const res = await fetch('/api/categorie/list');
+        const json = await res.json().catch(() => null) as { items?: Categoria[] } | null;
+        if (res.ok && json?.items && Array.isArray(json.items)) {
+          setCategorieCaricate(json.items);
+        } else {
+          // Fallback a categorie hardcoded se API fallisce
+          setCategorieCaricate([
+            { id: 'idraulico', nome: 'Idraulico', icona: '🔧', descrizione: '' },
+            { id: 'elettricista', nome: 'Elettricista', icona: '⚡', descrizione: '' },
+            { id: 'giardiniere', nome: 'Giardiniere', icona: '🌳', descrizione: '' },
+            { id: 'pulizie', nome: 'Pulizie', icona: '🧹', descrizione: '' },
+            { id: 'traslochi', nome: 'Traslochi', icona: '📦', descrizione: '' },
+            { id: 'ristrutturazioni', nome: 'Ristrutturazioni', icona: '🏗️', descrizione: '' },
+            { id: 'informatica', nome: 'Informatica', icona: '💻', descrizione: '' },
+            { id: 'altro', nome: 'Altro', icona: '🔧', descrizione: '' },
+          ]);
+        }
+      } catch (error) {
+        console.error('Errore caricamento categorie:', error);
+        // Fallback a categorie hardcoded
+        setCategorieCaricate([
+          { id: 'idraulico', nome: 'Idraulico', icona: '🔧', descrizione: '' },
+          { id: 'elettricista', nome: 'Elettricista', icona: '⚡', descrizione: '' },
+          { id: 'giardiniere', nome: 'Giardiniere', icona: '🌳', descrizione: '' },
+          { id: 'pulizie', nome: 'Pulizie', icona: '🧹', descrizione: '' },
+          { id: 'traslochi', nome: 'Traslochi', icona: '📦', descrizione: '' },
+          { id: 'ristrutturazioni', nome: 'Ristrutturazioni', icona: '🏗️', descrizione: '' },
+          { id: 'informatica', nome: 'Informatica', icona: '💻', descrizione: '' },
+          { id: 'altro', nome: 'Altro', icona: '🔧', descrizione: '' },
+        ]);
+      } finally {
+        setLoadingCategorie(false);
+      }
+    };
+
+    if (isOpen) {
+      loadCategorie();
+    }
+  }, [isOpen]);
 
   const specializzazioni = [
     'Riparazioni urgenti',
@@ -233,22 +274,40 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
 
           {/* Informazioni Professionali */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Categoria Servizio *
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Categoria Servizio *
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowRichiediCategoria(true)}
+                className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Richiedi nuova categoria</span>
+              </button>
+            </div>
             <div className="relative">
               <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <select
                 value={formData.categoria_servizio}
                 onChange={(e) => handleInputChange('categoria_servizio', e.target.value)}
-                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.categoria_servizio ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
+                disabled={loadingCategorie}
+                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.categoria_servizio ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'} ${loadingCategorie ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <option value="">Seleziona categoria</option>
-                {categorieServizi.map(categoria => (
-                  <option key={categoria} value={categoria}>{categoria}</option>
+                <option value="">
+                  {loadingCategorie ? 'Caricamento categorie...' : 'Seleziona categoria'}
+                </option>
+                {categorieCaricate.map(categoria => (
+                  <option key={categoria.id} value={categoria.nome}>
+                    {categoria.icona} {categoria.nome}
+                  </option>
                 ))}
               </select>
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Non trovi la tua categoria? Clicca su "Richiedi nuova categoria"
+            </p>
           </div>
 
           <div>
@@ -413,6 +472,14 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
             </p>
           </div>
         </form>
+
+        {/* Modal Richiesta Categoria */}
+        <RichiediCategoriaModal
+          isOpen={showRichiediCategoria}
+          onClose={() => setShowRichiediCategoria(false)}
+          richiedenteEmail={formData.email || ''}
+          richiedenteNome={`${formData.nome} ${formData.cognome}`.trim() || ''}
+        />
       </div>
     </div>
   );
