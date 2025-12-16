@@ -63,7 +63,19 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ items: data || [] });
+    // Cache headers: admin sempre dati freschi, pubblico cache 1 ora
+    const bypassCache = isAdmin || status === 'pending';
+    
+    return NextResponse.json({ items: data || [] }, {
+      headers: bypassCache
+        ? {
+            'Cache-Control': 'private, no-store, max-age=0',
+            Vary: 'Authorization',
+          }
+        : {
+            'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+          },
+    });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Errore';
     return NextResponse.json({ error: msg }, { status: 500 });

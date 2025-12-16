@@ -31,7 +31,8 @@ export default function ServiziPubbliciPage() {
     // Carica dal DB (con fallback ai dati locali già presenti nello store)
     (async () => {
       try {
-        const res = await fetch('/api/servizi-pubblici/list', { cache: 'no-store' });
+        // Fetch rispetta automaticamente Cache-Control headers del server (1 ora)
+        const res = await fetch('/api/servizi-pubblici/list');
         const json = await res.json().catch(() => null) as { items?: ServizioPubblico[] } | null;
         if (res.ok && json?.items && Array.isArray(json.items)) {
           setServiziPubblici(json.items);
