@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { Professionista } from '@/types';
 import { Star, Phone, MessageCircle, Heart, MapPin, Clock } from 'lucide-react';
@@ -13,6 +15,7 @@ interface ProfessionistaCardProps {
 }
 
 export default function ProfessionistaCard({ professionista }: ProfessionistaCardProps) {
+  const router = useRouter();
   const { utente, isAuthenticated, addReview, showToast, addFavorite, removeFavorite } = useAppStore();
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
@@ -83,8 +86,8 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
       {hasMounted && !isAuthenticated && (
         <div 
           className="absolute inset-0 bg-transparent rounded-lg z-10 cursor-pointer"
-          onClick={() => (window.location.href='?login=1')}
-          aria-label="Accedi per vedere i dettagli del professionista"
+          onClick={() => router.push(`/professionisti/${professionista.id}`)}
+          aria-label="Apri profilo professionista"
         />
       )}
       {/* Header */}
@@ -97,7 +100,9 @@ export default function ProfessionistaCard({ professionista }: ProfessionistaCar
           />
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {professionista.nome} {professionista.cognome}
+              <Link href={`/professionisti/${professionista.id}`} className="hover:underline">
+                {professionista.nome} {professionista.cognome}
+              </Link>
             </h3>
             <p className="text-sm text-gray-600">
               {professionista.categoriaServizio}

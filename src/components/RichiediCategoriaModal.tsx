@@ -8,6 +8,7 @@ interface RichiediCategoriaModalProps {
   onClose: () => void;
   richiedenteEmail: string;
   richiedenteNome: string;
+  onRequestSent?: (categoriaNome: string) => void; // Callback quando la richiesta viene inviata
 }
 
 export default function RichiediCategoriaModal({
@@ -15,6 +16,7 @@ export default function RichiediCategoriaModal({
   onClose,
   richiedenteEmail,
   richiedenteNome,
+  onRequestSent,
 }: RichiediCategoriaModalProps) {
   const [nomeCategoria, setNomeCategoria] = useState('');
   const [descrizione, setDescrizione] = useState('');
@@ -34,6 +36,10 @@ export default function RichiediCategoriaModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevenzione doppio click
+    if (loading) return;
+    
     setError('');
     setLoading(true);
 
@@ -64,13 +70,16 @@ export default function RichiediCategoriaModal({
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Errore durante l\'invio della richiesta');
+        // Messaggio più user-friendly per errori di duplicate
+        const errorMessage = data.error || 'Errore durante l\'invio della richiesta';
+        throw new Error(errorMessage);
       }
 
       setSuccess(true);
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+      // Notifica il parent che la richiesta è stata inviata
+      if (onRequestSent) {
+        onRequestSent(nomeCategoria.trim());
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore durante l\'invio della richiesta');
     } finally {
@@ -100,9 +109,22 @@ export default function RichiediCategoriaModal({
               <CheckCircle className="w-6 h-6" />
               <p className="font-medium">Richiesta inviata con successo!</p>
             </div>
-            <p className="text-gray-600 text-sm">
-              La tua richiesta è stata inviata all'amministratore. Riceverai un'email quando verrà esaminata.
-            </p>
+            <div className="space-y-3">
+              <p className="text-gray-600 text-sm">
+                La tua richiesta è stata inviata all'amministratore. Riceverai un'email quando verrà esaminata.
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>💡 Suggerimento:</strong> Puoi continuare la registrazione selezionando una categoria temporanea (es. "Altro") e aggiornare la categoria quando la tua richiesta verrà approvata.
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Continua Registrazione
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -121,7 +143,7 @@ export default function RichiediCategoriaModal({
                 type="text"
                 value={nomeCategoria}
                 onChange={(e) => setNomeCategoria(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="es. Fotografo, Personal Trainer..."
                 maxLength={50}
                 disabled={loading}
@@ -140,7 +162,7 @@ export default function RichiediCategoriaModal({
                 value={descrizione}
                 onChange={(e) => setDescrizione(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Spiega brevemente perché questa categoria è necessaria..."
                 disabled={loading}
               />

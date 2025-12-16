@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { serviziPubblici, categorie } from '@/data/mockData';
 import { authHelpers, professionistiHelpers, recensioniHelpers, preferitiHelpers } from '@/lib/supabase-helpers';
 import type { Professionista, ServizioPubblico, Categoria, Recensione, Utente, LoginForm, RegisterForm, LoginProfessionistaForm, RegisterProfessionistaForm, UserType, SupabaseUtente, SupabaseProfessionista } from '@/types';
+import type { Database } from '@/lib/supabase';
 
 // Mappatura categorie per gestire discrepanze tra Supabase e categorie locali
 const categoriaMapping: Record<string, string> = {
@@ -754,7 +755,24 @@ export const useAppStore = create<AppState>()(
         const { professionistaLoggato } = get();
         if (professionistaLoggato) {
           try {
-            const updatedProfile = await professionistiHelpers.updateProfessionistaProfile(professionistaLoggato.id, profile);
+            // Mappa camelCase (app) -> snake_case (Supabase)
+            const updates: Database['public']['Tables']['professionisti']['Update'] = {};
+            if (profile.nome !== undefined) updates.nome = profile.nome;
+            if (profile.cognome !== undefined) updates.cognome = profile.cognome;
+            if (profile.telefono !== undefined) updates.telefono = profile.telefono;
+            if (profile.email !== undefined) updates.email = profile.email;
+            if (profile.categoriaServizio !== undefined) updates.categoria_servizio = profile.categoriaServizio;
+            if (profile.specializzazioni !== undefined) updates.specializzazioni = profile.specializzazioni;
+            if (profile.zonaServizio !== undefined) updates.zona_servizio = profile.zonaServizio;
+            if (profile.orariDisponibili !== undefined) updates.orari_disponibili = profile.orariDisponibili;
+            if (profile.descrizione !== undefined) updates.descrizione = profile.descrizione;
+            if (profile.fotoProfilo !== undefined) updates.foto_profilo = profile.fotoProfilo || undefined;
+            if (profile.isVerified !== undefined) updates.is_verified = Boolean(profile.isVerified);
+            if (profile.isActive !== undefined) updates.is_active = Boolean(profile.isActive);
+            if (profile.partitaIva !== undefined) updates.partita_iva = profile.partitaIva || undefined;
+            if (profile.codiceFiscale !== undefined) updates.codice_fiscale = profile.codiceFiscale || undefined;
+
+            const updatedProfile = await professionistiHelpers.updateProfessionistaProfile(professionistaLoggato.id, updates);
             if (updatedProfile) {
               set({ professionistaLoggato: convertSupabaseProfessionista(updatedProfile) });
             }

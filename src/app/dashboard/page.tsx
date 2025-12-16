@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
-import { serviziHelpers, recensioniHelpers } from '@/lib/supabase-helpers';
+import { professionistiHelpers, serviziHelpers, recensioniHelpers } from '@/lib/supabase-helpers';
 import { 
   User, 
   Star, 
@@ -22,7 +22,8 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { Servizio, Recensione } from '@/types';
+import { Servizio, Recensione, Categoria } from '@/types';
+import Avatar from '@/components/Avatar';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -39,6 +40,12 @@ export default function DashboardPage() {
   const [showAddServiceModal, setShowAddServiceModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Foto profilo (upload)
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [photoStatus, setPhotoStatus] = useState<string>('');
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   
   // Dati caricati dal database
   const [servizi, setServizi] = useState<Servizio[]>([]);
@@ -57,10 +64,15 @@ export default function DashboardPage() {
     cognome: '',
     telefono: '',
     email: '',
+    categoriaServizio: '',
     zonaServizio: '',
     orariDisponibili: '',
     descrizione: ''
   });
+
+  // Categorie disponibili
+  const [categorieCaricate, setCategorieCaricate] = useState<Categoria[]>([]);
+  const [loadingCategorie, setLoadingCategorie] = useState(false);
 
   const tabs = [
     { id: 'overview', label: 'Panoramica', icon: BarChart3 },
@@ -107,6 +119,25 @@ export default function DashboardPage() {
     }
   }, [professionistaLoggato?.id]);
 
+  // Carica categorie disponibili
+  useEffect(() => {
+    const loadCategorie = async () => {
+      try {
+        setLoadingCategorie(true);
+        const res = await fetch('/api/categorie/list');
+        const json = await res.json().catch(() => null) as { items?: Categoria[] } | null;
+        if (res.ok && json?.items && Array.isArray(json.items)) {
+          setCategorieCaricate(json.items);
+        }
+      } catch (error) {
+        console.error('Errore caricamento categorie:', error);
+      } finally {
+        setLoadingCategorie(false);
+      }
+    };
+    loadCategorie();
+  }, []);
+
   // Carica dati all'avvio
   useEffect(() => {
     loadProfessionistaData();
@@ -120,12 +151,66 @@ export default function DashboardPage() {
         cognome: professionistaLoggato.cognome || '',
         telefono: professionistaLoggato.telefono || '',
         email: professionistaLoggato.email || '',
+        categoriaServizio: professionistaLoggato.categoriaServizio || '',
         zonaServizio: professionistaLoggato.zonaServizio || '',
         orariDisponibili: professionistaLoggato.orariDisponibili || '',
         descrizione: professionistaLoggato.descrizione || ''
       });
     }
   }, [professionistaLoggato]);
+
+  // Cleanup preview URL
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    };
+  }, [photoPreviewUrl]);
+
+  const handlePhotoSelect = (file: File | null) => {
+    setPhotoStatus('');
+    if (!file) {
+      setPhotoFile(null);
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+      setPhotoPreviewUrl(null);
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setPhotoStatus('Seleziona un file immagine valido (PNG/JPG/WebP).');
+      return;
+    }
+
+    const maxBytes = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxBytes) {
+      setPhotoStatus('Immagine troppo grande (max 5MB).');
+      return;
+    }
+
+    setPhotoFile(file);
+    if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!professionistaLoggato?.id || !photoFile) return;
+    setPhotoStatus('');
+    setIsUploadingPhoto(true);
+    try {
+      const publicUrl = await professionistiHelpers.uploadFotoProfilo(professionistaLoggato.id, photoFile);
+      const cacheBusted = `${publicUrl}${publicUrl.includes('?') ? '&' : '?'}v=${Date.now()}`;
+      await updateProfessionistaProfile({ fotoProfilo: cacheBusted });
+
+      setPhotoStatus('Foto profilo aggiornata.');
+      setPhotoFile(null);
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl);
+      setPhotoPreviewUrl(null);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Errore durante l’upload della foto';
+      setPhotoStatus(message);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
 
   // Reindirizza se non è un professionista autenticato
   useEffect(() => {
@@ -193,6 +278,7 @@ export default function DashboardPage() {
         nome: editedProfile.nome,
         cognome: editedProfile.cognome,
         telefono: editedProfile.telefono,
+        categoriaServizio: editedProfile.categoriaServizio,
         zonaServizio: editedProfile.zonaServizio,
         orariDisponibili: editedProfile.orariDisponibili,
         descrizione: editedProfile.descrizione
@@ -370,6 +456,56 @@ export default function DashboardPage() {
     <div className="bg-white p-6 rounded-lg shadow-sm border">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Modifica profilo</h3>
       <form onSubmit={handleSaveProfile} className="space-y-6">
+        {/* Foto profilo */}
+        <div className="border border-gray-200 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <Avatar
+                src={photoPreviewUrl || professionistaLoggato?.fotoProfilo || null}
+                alt={`${professionistaLoggato?.nome || ''} ${professionistaLoggato?.cognome || ''}`.trim() || 'Foto profilo'}
+                size="lg"
+              />
+              <div className="space-y-1">
+                <p className="font-medium text-gray-900">Foto profilo</p>
+                <p className="text-sm text-gray-600">Consigliato: immagine quadrata (min 400x400), max 5MB.</p>
+              </div>
+            </div>
+
+            <div className="sm:ml-auto flex flex-col gap-2 w-full sm:w-auto">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handlePhotoSelect(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-900 hover:file:bg-gray-200"
+                aria-label="Carica foto profilo"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleUploadPhoto}
+                  disabled={!photoFile || isUploadingPhoto}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUploadingPhoto ? 'Upload…' : 'Carica foto'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePhotoSelect(null)}
+                  disabled={!photoFile || isUploadingPhoto}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Annulla
+                </button>
+              </div>
+              {photoStatus && (
+                <p className="text-sm text-gray-600" aria-live="polite">
+                  {photoStatus}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2">
@@ -419,6 +555,27 @@ export default function DashboardPage() {
             />
             <p className="text-xs text-gray-500 mt-1">L&apos;email non può essere modificata</p>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-2">
+            Categoria Servizio *
+          </label>
+          <select
+            value={editedProfile.categoriaServizio}
+            onChange={(e) => setEditedProfile(prev => ({ ...prev, categoriaServizio: e.target.value }))}
+            disabled={loadingCategorie}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">
+              {loadingCategorie ? 'Caricamento categorie...' : 'Seleziona categoria'}
+            </option>
+            {categorieCaricate.map(categoria => (
+              <option key={categoria.id} value={categoria.nome}>
+                {categoria.icona} {categoria.nome}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -754,4 +911,4 @@ export default function DashboardPage() {
       )}
     </>
   );
-}
+} 

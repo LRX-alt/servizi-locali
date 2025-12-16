@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { X, User, Mail, Lock, Phone, MapPin, Eye, EyeOff } from 'lucide-react';
+import { X, User, Mail, Lock, MapPin, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import PhoneInput from './PhoneInput';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -219,17 +220,11 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Telefono
             </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="tel"
-                value={formData.telefono}
-                onChange={(e) => handleInputChange('telefono', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                placeholder="+39 123 456 7890"
-                autoComplete="tel"
-              />
-            </div>
+            <PhoneInput
+              value={formData.telefono}
+              onChange={(value) => handleInputChange('telefono', value)}
+              placeholder="123 456 7890"
+            />
           </div>
 
           <div>

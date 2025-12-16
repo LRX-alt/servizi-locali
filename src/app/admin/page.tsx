@@ -20,6 +20,7 @@ export default function AdminPage() {
   } = useAppStore();
 
   const [pendingApprovals, setPendingApprovals] = useState<number>(0);
+  const [pendingCategorieRequests, setPendingCategorieRequests] = useState<number>(0);
 
   // Carica contatori dal DB (servizi pubblici + professionisti) quando sei admin
   useEffect(() => {
@@ -58,6 +59,25 @@ export default function AdminPage() {
       } catch {}
     };
     loadPending();
+  }, [isAuthenticated, isAdmin]);
+
+  // Conta richieste categorie pending (solo admin)
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) return;
+    const loadPendingCategorie = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token || undefined;
+        const res = await fetch('/api/richieste-categorie/list?status=pending', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        const json = await res.json();
+        if (res.ok && Array.isArray(json.items)) {
+          setPendingCategorieRequests(json.items.length);
+        }
+      } catch {}
+    };
+    loadPendingCategorie();
   }, [isAuthenticated, isAdmin]);
 
   // Controllo accesso admin (TEMPORANEAMENTE DISABILITATO PER DEBUG)
@@ -107,6 +127,7 @@ export default function AdminPage() {
     professionisti: professionisti.length,
     totalUsers: 0,
     pendingApprovals,
+    pendingCategorieRequests,
   };
 
   return (
@@ -143,7 +164,7 @@ export default function AdminPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistiche */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center">
               <Building className="w-8 h-8 text-blue-600" />
@@ -178,8 +199,18 @@ export default function AdminPage() {
             <div className="flex items-center">
               <Eye className="w-8 h-8 text-orange-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">In Attesa</p>
+                <p className="text-sm font-medium text-gray-600">Recensioni In Attesa</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center">
+              <Building className="w-8 h-8 text-indigo-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Richieste Categorie</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingCategorieRequests}</p>
               </div>
             </div>
           </div>
@@ -231,6 +262,18 @@ export default function AdminPage() {
               <Link href="/admin/categorie" className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors w-full">
                 <Building className="w-4 h-4" />
                 <span>Categorie</span>
+              </Link>
+              <Link 
+                href="/admin/richieste-categorie" 
+                className="flex items-center space-x-2 bg-amber-600 text-white px-4 py-2 rounded-md hover:bg-amber-700 transition-colors w-full relative"
+              >
+                <Building className="w-4 h-4" />
+                <span>Richieste Categorie</span>
+                {stats.pendingCategorieRequests > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {stats.pendingCategorieRequests}
+                  </span>
+                )}
               </Link>
             </div>
           </div>

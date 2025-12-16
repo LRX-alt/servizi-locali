@@ -158,11 +158,11 @@ async function sendApprovalEmail(email: string, nome: string, categoriaNome: str
             <h2 style="color: #10B981;">Richiesta Approvata!</h2>
             <p>Ciao ${nome},</p>
             <p>La tua richiesta per la categoria <strong>"${categoriaNome}"</strong> è stata approvata dall'amministratore.</p>
-            <p>Ora puoi completare la registrazione come professionista selezionando questa categoria.</p>
+            <p>Ora puoi accedere al tuo profilo e aggiornare la tua categoria da "Altro" alla nuova categoria creata.</p>
             <p style="margin-top: 30px;">
-              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}" 
+              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/profilo" 
                  style="background-color: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Vai alla Registrazione
+                Vai al Profilo
               </a>
             </p>
             <p style="margin-top: 30px; color: #6B7280; font-size: 14px;">

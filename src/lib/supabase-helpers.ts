@@ -272,6 +272,52 @@ export const professionistiHelpers = {
     if (error) throw error;
     return data;
   },
+
+  // Upload foto profilo professionista (Supabase Storage) e ritorna l'URL pubblico
+  async uploadFotoProfilo(profId: string, file: File) {
+    // Verifica che ci sia una sessione valida
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Sessione scaduta. Effettua il logout e accedi di nuovo.');
+    }
+
+    const bucket = process.env.NEXT_PUBLIC_SUPABASE_PROFILE_BUCKET || 'profili';
+
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const safeExt = ext.replace(/[^a-z0-9]/g, '') || 'jpg';
+    const path = `professionisti/${profId}/foto-profilo.${safeExt}`;
+
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
+      upsert: true,
+      contentType: file.type || 'image/jpeg',
+      cacheControl: '3600',
+    });
+
+    if (uploadError) {
+      // Messaggio più utile per setup non completato (bucket/policy)
+      const msg = uploadError.message || 'Errore upload';
+      
+      if (msg.includes('not found') || msg.includes('Bucket not found')) {
+        throw new Error(
+          `Bucket "${bucket}" non trovato in Supabase Storage. ` +
+          `Crea il bucket "profili" nel pannello Storage di Supabase e imposta le policy: ` +
+          `INSERT (autenticati), SELECT (pubblico per lettura).`
+        );
+      }
+      
+      if (msg.includes('new row violates row-level security') || msg.includes('permission denied') || msg.includes('JWT')) {
+        throw new Error('Sessione scaduta o permessi insufficienti. Effettua il logout e accedi di nuovo.');
+      }
+      
+      throw new Error(`Upload foto non riuscito: ${msg}`);
+    }
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    if (!data?.publicUrl) {
+      throw new Error('Impossibile ottenere l\'URL pubblico della foto');
+    }
+    return data.publicUrl;
+  },
 };
 
 // ===== RECENSIONI =====

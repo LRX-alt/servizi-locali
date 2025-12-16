@@ -193,6 +193,50 @@ export interface Database {
           data_aggiunta?: string;
         };
       };
+      richieste_categorie: {
+        Row: {
+          id: string;
+          nome_categoria: string;
+          descrizione: string | null;
+          richiedente_email: string;
+          richiedente_nome: string;
+          stato: 'pending' | 'approvata' | 'rifiutata';
+          data_richiesta: string;
+          data_risposta: string | null;
+          admin_note: string | null;
+          categoria_creata_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          nome_categoria: string;
+          descrizione?: string | null;
+          richiedente_email: string;
+          richiedente_nome: string;
+          stato?: 'pending' | 'approvata' | 'rifiutata';
+          data_richiesta?: string;
+          data_risposta?: string | null;
+          admin_note?: string | null;
+          categoria_creata_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          nome_categoria?: string;
+          descrizione?: string | null;
+          richiedente_email?: string;
+          richiedente_nome?: string;
+          stato?: 'pending' | 'approvata' | 'rifiutata';
+          data_richiesta?: string;
+          data_risposta?: string | null;
+          admin_note?: string | null;
+          categoria_creata_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 } 

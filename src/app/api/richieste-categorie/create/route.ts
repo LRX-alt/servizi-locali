@@ -113,12 +113,33 @@ export async function POST(req: Request) {
         fullError: JSON.stringify(error, null, 2),
       });
       
+      // Gestione specifica per errore di duplicate key (race condition)
+      if (error.code === '23505' && error.message?.includes('idx_richieste_categorie_unique')) {
+        // Verifica se esiste davvero una richiesta pending
+        const { data: richiestaVerifica } = await adminClient
+          .from('richieste_categorie')
+          .select('id, stato')
+          .eq('richiedente_email', richiedente_email.trim())
+          .ilike('nome_categoria', nomeCategoriaTrimmed)
+          .eq('stato', 'pending')
+          .maybeSingle();
+        
+        if (richiestaVerifica) {
+          return NextResponse.json(
+            { error: 'Hai già una richiesta in attesa per questa categoria. Controlla le tue richieste o attendi la risposta dell\'amministratore.' },
+            { status: 400 }
+          );
+        }
+      }
+      
       // Messaggio più specifico per errori comuni
       let errorMessage = 'Errore durante la creazione della richiesta';
       if (error.code === '42P01') {
         errorMessage = 'La tabella richieste_categorie non esiste. Esegui lo script SQL in Supabase.';
       } else if (error.code === '42501') {
         errorMessage = 'Permesso negato. Verifica le RLS policies in Supabase.';
+      } else if (error.code === '23505') {
+        errorMessage = 'Hai già una richiesta in attesa per questa categoria. Controlla le tue richieste o attendi la risposta dell\'amministratore.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -132,7 +153,7 @@ export async function POST(req: Request) {
             details: error.details,
           } : undefined
         },
-        { status: 500 }
+        { status: error.code === '23505' ? 400 : 500 }
       );
     }
 

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Mail, Lock, Phone, MapPin, Building2, FileText, Eye, EyeOff, Plus } from 'lucide-react';
+import { X, User, Mail, Lock, MapPin, Building2, FileText, Eye, EyeOff, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/store';
 import RichiediCategoriaModal from './RichiediCategoriaModal';
+import PhoneInput from './PhoneInput';
 import type { Categoria } from '@/types';
 
 interface RegisterProfessionistaModalProps {
@@ -45,6 +46,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showRichiediCategoria, setShowRichiediCategoria] = useState(false);
+  const [categoriaRichiesta, setCategoriaRichiesta] = useState<string | null>(null);
   const [categorieCaricate, setCategorieCaricate] = useState<Categoria[]>([]);
   const [loadingCategorie, setLoadingCategorie] = useState(true);
   const { categorie } = useAppStore();
@@ -260,16 +262,13 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Telefono *
             </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="tel"
-                value={formData.telefono}
-                onChange={(e) => handleInputChange('telefono', e.target.value)}
-                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${invalid.telefono ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'}`}
-                placeholder="+39 123 456 7890"
-              />
-            </div>
+            <PhoneInput
+              value={formData.telefono}
+              onChange={(value) => handleInputChange('telefono', value)}
+              placeholder="123 456 7890"
+              invalid={invalid.telefono}
+              required
+            />
           </div>
 
           {/* Informazioni Professionali */}
@@ -308,6 +307,14 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
             <p className="text-xs text-gray-500 mt-1">
               Non trovi la tua categoria? Clicca su "Richiedi nuova categoria"
             </p>
+            {categoriaRichiesta && (
+              <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
+                <p className="text-xs text-blue-800">
+                  <strong>✓ Richiesta inviata:</strong> "{categoriaRichiesta}" è stata richiesta. 
+                  Puoi continuare la registrazione selezionando una categoria temporanea (es. "Altro") e aggiornare quando la tua richiesta verrà approvata.
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -479,6 +486,15 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
           onClose={() => setShowRichiediCategoria(false)}
           richiedenteEmail={formData.email || ''}
           richiedenteNome={`${formData.nome} ${formData.cognome}`.trim() || ''}
+          onRequestSent={(categoriaNome) => {
+            setCategoriaRichiesta(categoriaNome);
+            setShowRichiediCategoria(false);
+            // Suggerisci di selezionare "Altro" se disponibile
+            const categoriaAltro = categorieCaricate.find(c => c.nome.toLowerCase() === 'altro');
+            if (categoriaAltro && !formData.categoria_servizio) {
+              handleInputChange('categoria_servizio', categoriaAltro.nome);
+            }
+          }}
         />
       </div>
     </div>
