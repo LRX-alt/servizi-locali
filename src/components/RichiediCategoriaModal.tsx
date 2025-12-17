@@ -111,11 +111,11 @@ export default function RichiediCategoriaModal({
             </div>
             <div className="space-y-3">
               <p className="text-gray-600 text-sm">
-                La tua richiesta è stata inviata all'amministratore. Riceverai un'email quando verrà esaminata.
+                La tua richiesta è stata inviata all&apos;amministratore. Riceverai un&apos;email quando verrà esaminata.
               </p>
               <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
                 <p className="text-sm text-yellow-800">
-                  <strong>💡 Suggerimento:</strong> Puoi continuare la registrazione selezionando una categoria temporanea (es. "Altro") e aggiornare la categoria quando la tua richiesta verrà approvata.
+                  <strong>💡 Suggerimento:</strong> Puoi continuare la registrazione selezionando una categoria temporanea (es. &quot;Altro&quot;) e aggiornare la categoria quando la tua richiesta verrà approvata.
                 </p>
               </div>
               <button
@@ -170,8 +170,8 @@ export default function RichiediCategoriaModal({
 
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
               <p className="text-sm text-blue-800">
-                <strong>Nota:</strong> La tua richiesta verrà esaminata dall'amministratore. 
-                Riceverai un'email quando verrà approvata o rifiutata.
+                <strong>Nota:</strong> La tua richiesta verrà esaminata dall&apos;amministratore. 
+                Riceverai un&apos;email quando verrà approvata o rifiutata.
               </p>
             </div>
 

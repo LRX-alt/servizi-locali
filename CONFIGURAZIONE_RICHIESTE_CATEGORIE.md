@@ -197,3 +197,4 @@ richieste_categorie
 
 *Documento creato per la configurazione del sistema richieste categorie*
 
+

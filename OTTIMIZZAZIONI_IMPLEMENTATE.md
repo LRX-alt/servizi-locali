@@ -209,3 +209,4 @@ AND is_active = true;
 - `ESEMPI_IMPLEMENTAZIONE.md` - Esempi di codice
 - `ANALISI_TRAFFICO_80000_ABITANTI.md` - Analisi traffico
 
+

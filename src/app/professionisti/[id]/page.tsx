@@ -60,9 +60,10 @@ function buildDescription(prof: Professionista) {
   return descr || 'Profilo professionista su Servizi Locali.';
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
-    const prof = await professionistiHelpers.getProfessionistaById(params.id);
+    const { id } = await params;
+    const prof = await professionistiHelpers.getProfessionistaById(id);
     if (!prof) {
       return {
         title: 'Profilo non trovato | Servizi Locali',
@@ -74,7 +75,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     const fullName = `${p.nome} ${p.cognome}`.trim();
     const title = fullName ? `${fullName} | Servizi Locali` : 'Professionista | Servizi Locali';
     const description = buildDescription(p);
-    const canonical = `/professionisti/${params.id}`;
+    const canonical = `/professionisti/${id}`;
 
     return {
       title,
@@ -145,8 +146,9 @@ async function getPageData(id: string): Promise<{
 // ISR: Rigenera la pagina ogni ora (dati cambiano raramente)
 export const revalidate = 3600; // 1 ora in secondi
 
-export default async function ProfessionistaPublicPage({ params }: { params: { id: string } }) {
-  const { professionista, servizi, recensioni } = await getPageData(params.id);
+export default async function ProfessionistaPublicPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { professionista, servizi, recensioni } = await getPageData(id);
   return (
     <ProfessionistaPublicClient professionista={professionista} servizi={servizi} recensioni={recensioni} />
   );

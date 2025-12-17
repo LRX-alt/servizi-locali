@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { X, User, Mail, Lock, MapPin, Building2, FileText, Eye, EyeOff, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useAppStore } from '@/store';
 import RichiediCategoriaModal from './RichiediCategoriaModal';
 import PhoneInput from './PhoneInput';
 import type { Categoria } from '@/types';
@@ -49,7 +48,6 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
   const [categoriaRichiesta, setCategoriaRichiesta] = useState<string | null>(null);
   const [categorieCaricate, setCategorieCaricate] = useState<Categoria[]>([]);
   const [loadingCategorie, setLoadingCategorie] = useState(true);
-  const { categorie } = useAppStore();
 
   // Carica categorie dal database
   useEffect(() => {
@@ -305,13 +303,13 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
               </select>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Non trovi la tua categoria? Clicca su "Richiedi nuova categoria"
+              Non trovi la tua categoria? Clicca su &quot;Richiedi nuova categoria&quot;
             </p>
             {categoriaRichiesta && (
               <div className="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
                 <p className="text-xs text-blue-800">
-                  <strong>✓ Richiesta inviata:</strong> "{categoriaRichiesta}" è stata richiesta. 
-                  Puoi continuare la registrazione selezionando una categoria temporanea (es. "Altro") e aggiornare quando la tua richiesta verrà approvata.
+                  <strong>✓ Richiesta inviata:</strong> &quot;{categoriaRichiesta}&quot; è stata richiesta. 
+                  Puoi continuare la registrazione selezionando una categoria temporanea (es. &quot;Altro&quot;) e aggiornare quando la tua richiesta verrà approvata.
                 </p>
               </div>
             )}

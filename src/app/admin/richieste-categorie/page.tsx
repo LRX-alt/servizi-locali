@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store';
-import { useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle, XCircle, Clock, Plus } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { ArrowLeft, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface RichiestaCategoria {
@@ -36,12 +36,7 @@ export default function AdminRichiesteCategoriePage() {
     if (isAuthenticated && !isAdmin) router.push('/admin');
   }, [isAuthenticated, isAdmin, router]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !isAdmin) return;
-    loadRichieste();
-  }, [isAuthenticated, isAdmin, filtroStato]);
-
-  const loadRichieste = async () => {
+  const loadRichieste = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -56,12 +51,17 @@ export default function AdminRichiesteCategoriePage() {
       } else {
         setError(json.error || 'Errore nel caricamento delle richieste');
       }
-    } catch (err) {
+    } catch {
       setError('Errore di rete durante il caricamento');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtroStato]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !isAdmin) return;
+    loadRichieste();
+  }, [isAuthenticated, isAdmin, loadRichieste]);
 
   const handleApprove = async () => {
     if (!richiestaSelezionata || !formApprove.nome || !formApprove.icona) return;
@@ -92,7 +92,7 @@ export default function AdminRichiesteCategoriePage() {
       } else {
         setError(data.error || 'Errore durante l\'approvazione');
       }
-    } catch (err) {
+    } catch {
       setError('Errore durante l\'approvazione');
     }
   };
@@ -124,7 +124,7 @@ export default function AdminRichiesteCategoriePage() {
       } else {
         setError(data.error || 'Errore durante il rifiuto');
       }
-    } catch (err) {
+    } catch {
       setError('Errore durante il rifiuto');
     }
   };
@@ -372,7 +372,7 @@ export default function AdminRichiesteCategoriePage() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Rifiuta Richiesta</h2>
             <div className="space-y-4">
               <p className="text-gray-600">
-                Stai per rifiutare la richiesta per la categoria <strong>"{richiestaSelezionata.nome_categoria}"</strong>
+                Stai per rifiutare la richiesta per la categoria <strong>&quot;{richiestaSelezionata.nome_categoria}&quot;</strong>
               </p>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -410,4 +410,5 @@ export default function AdminRichiesteCategoriePage() {
     </div>
   );
 }
+
 

@@ -62,7 +62,7 @@ function ShareProfileButton({ title }: { title: string }) {
     }
   };
 
-  const canShare = typeof window !== 'undefined' && typeof navigator !== 'undefined' && Boolean((navigator as any).share);
+  const canShare = typeof window !== 'undefined' && typeof navigator !== 'undefined' && Boolean((navigator as { share?: unknown }).share);
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -273,5 +273,6 @@ export default function ProfessionistaPublicClient({
     </main>
   );
 }
+
 
 
