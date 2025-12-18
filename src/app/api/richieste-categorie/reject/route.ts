@@ -125,14 +125,17 @@ async function sendRejectionEmail(
       body: JSON.stringify({
         from: process.env.EMAIL_FROM || 'Servizi Locali <noreply@servizilocali.it>',
         to: email,
-        subject: `❌ Richiesta categoria "${categoriaNome}" non approvata`,
+        subject: `❌ Richiesta categoria &quot;${categoriaNome}&quot; non approvata`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #EF4444;">Richiesta Non Approvata</h2>
             <p>Ciao ${nome},</p>
-            <p>La tua richiesta per la categoria <strong>"${categoriaNome}"</strong> non è stata approvata dall'amministratore.</p>
-            ${motivo ? `<p><strong>Motivo:</strong> ${motivo}</p>` : ''}
-            <p>Puoi comunque completare la registrazione selezionando una delle categorie disponibili.</p>
+            <p>La tua richiesta per la categoria <strong>&quot;${categoriaNome}&quot;</strong> non è stata approvata dall&apos;amministratore.</p>
+            ${motivo ? `<div style="background-color: #FEF2F2; border-left: 4px solid #EF4444; padding: 12px; margin: 20px 0;">
+              <p style="margin: 0;"><strong>Motivo del rifiuto:</strong></p>
+              <p style="margin: 8px 0 0 0;">${motivo.replace(/\n/g, '<br>')}</p>
+            </div>` : '<p style="color: #6B7280; font-style: italic;">Non è stato fornito un motivo specifico per il rifiuto.</p>'}
+            <p>Puoi comunque completare la registrazione selezionando una delle categorie disponibili o richiedere una nuova categoria in futuro.</p>
             <p style="margin-top: 30px;">
               <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}" 
                  style="background-color: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">

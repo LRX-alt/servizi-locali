@@ -9,7 +9,7 @@ L'accesso al pannello amministrativo avviene **esclusivamente** tramite il siste
 2. Clicca su "Accedi" 
 3. Inserisci le credenziali amministratore:
    - **Email**: `admin@servizilocali.it`
-   - **Password**: `admin2024_secure`
+   - **Password**: `admin123secure`
 4. Verrai automaticamente riconosciuto come admin
 5. Dalla dashboard utente, clicca "Admin Panel" per accedere
 
@@ -64,5 +64,6 @@ L'accesso al pannello amministrativo avviene **esclusivamente** tramite il siste
 
 **Versione**: 2.0  
 **Ultimo Aggiornamento**: Gennaio 2025  
-**Credenziali Admin**: `admin@servizilocali.it` / `admin2024_secure`  
+**Credenziali Admin (Sviluppo)**: `admin@servizilocali.it` / `admin123secure`  
+**Nota**: Le credenziali sono configurate nel file `.env.local` con le variabili `NEXT_PUBLIC_DEV_ADMIN_EMAIL` e `NEXT_PUBLIC_DEV_ADMIN_PASSWORD`  
 **Tipo Login**: Utente (NON professionista)
