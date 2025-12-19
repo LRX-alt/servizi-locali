@@ -743,3 +743,5 @@ curl -I https://servizilocali.it | grep -i "strict-transport-security"
 *Questi esempi sono template di partenza. Adattali alle tue esigenze specifiche.*
 
 
+
+

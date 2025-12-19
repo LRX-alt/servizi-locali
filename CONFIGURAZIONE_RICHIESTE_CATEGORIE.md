@@ -34,17 +34,32 @@ EMAIL_FROM=Servizi Locali <noreply@servizilocali.it>
 
 **Nota**: Per usare un dominio personalizzato, configura DNS in Resend (vedi documentazione Resend).
 
-#### Opzione B: Altri Servizi Email
+#### Opzione B: Altri Servizi Email (Opzionale)
 
-Puoi sostituire Resend con:
+**Nota**: Se usi Resend (Opzione A), questo passaggio NON è necessario. Le funzioni email sono già configurate.
+
+Se vuoi sostituire Resend con un altro servizio, modifica le funzioni `sendApprovalEmail` e `sendRejectionEmail` in:
+- `src/app/api/richieste-categorie/approve/route.ts` (linea ~137)
+- `src/app/api/richieste-categorie/reject/route.ts` (linea ~106)
+
+Servizi alternativi disponibili:
 - **SendGrid** (gratuito fino a 100 email/giorno)
 - **Mailgun** (gratuito fino a 5000 email/mese)
 - **AWS SES** (molto economico)
 - **Supabase Edge Functions** (se configurato)
 
-Modifica le funzioni `sendApprovalEmail` e `sendRejectionEmail` in:
-- `src/app/api/richieste-categorie/approve/route.ts`
-- `src/app/api/richieste-categorie/reject/route.ts`
+**Esempio di modifica per SendGrid**:
+```typescript
+// Sostituisci la chiamata a Resend con SendGrid
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+await sgMail.send({
+  to: email,
+  from: process.env.EMAIL_FROM,
+  subject: `✅ Richiesta categoria "${categoriaNome}" approvata`,
+  html: `...`
+});
+```
 
 ### 3. Verifica Configurazione
 

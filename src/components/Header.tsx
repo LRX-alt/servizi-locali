@@ -68,6 +68,7 @@ function HeaderContent({
   const [showRegisterProfessionistaModal, setShowRegisterProfessionistaModal] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const [showLogoutNotice, setShowLogoutNotice] = useState(false);
+  const [authTypeSelectorMode, setAuthTypeSelectorMode] = useState<'login' | 'register'>('login');
 
   // Previeni errori di idratazione
   useEffect(() => {
@@ -90,6 +91,25 @@ function HeaderContent({
     } else {
       setShowLoginProfessionistaModal(true);
     }
+  };
+
+  const handleRegisterTypeSelect = (type: 'user' | 'professionista') => {
+    setShowAuthTypeSelector(false);
+    if (type === 'user') {
+      setShowRegisterModal(true);
+    } else {
+      setShowRegisterProfessionistaModal(true);
+    }
+  };
+
+  const handleOpenLoginSelector = () => {
+    setAuthTypeSelectorMode('login');
+    setShowAuthTypeSelector(true);
+  };
+
+  const handleOpenRegisterSelector = () => {
+    setAuthTypeSelectorMode('register');
+    setShowAuthTypeSelector(true);
   };
 
   const handleSwitchToRegister = (type: 'user' | 'professionista') => {
@@ -211,12 +231,20 @@ function HeaderContent({
                   </button>
                 </div>
               ) : hasMounted ? (
-                <button
-                  onClick={() => setShowAuthTypeSelector(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Accedi
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleOpenLoginSelector}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Accedi
+                  </button>
+                  <button
+                    onClick={handleOpenRegisterSelector}
+                    className="border border-blue-600 text-blue-600 px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
+                  >
+                    Registrati
+                  </button>
+                </div>
               ) : null}
             </div>
 
@@ -290,15 +318,28 @@ function HeaderContent({
                     </button>
                   </div>
                 ) : hasMounted ? (
-                  <button
-                    onClick={() => {
-                      setShowAuthTypeSelector(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Accedi
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => {
+                        setAuthTypeSelectorMode('login');
+                        setShowAuthTypeSelector(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      Accedi
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAuthTypeSelectorMode('register');
+                        setShowAuthTypeSelector(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full border border-blue-600 text-blue-600 px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"
+                    >
+                      Registrati
+                    </button>
+                  </div>
                 ) : null}
               </div>
             </div>
@@ -317,8 +358,20 @@ function HeaderContent({
       <AuthTypeSelector
         isOpen={showAuthTypeSelector}
         onClose={() => setShowAuthTypeSelector(false)}
-        onSelectUser={() => handleAuthTypeSelect('user')}
-        onSelectProfessionista={() => handleAuthTypeSelect('professionista')}
+        onSelectUser={() => {
+          if (authTypeSelectorMode === 'login') {
+            handleAuthTypeSelect('user');
+          } else {
+            handleRegisterTypeSelect('user');
+          }
+        }}
+        onSelectProfessionista={() => {
+          if (authTypeSelectorMode === 'login') {
+            handleAuthTypeSelect('professionista');
+          } else {
+            handleRegisterTypeSelect('professionista');
+          }
+        }}
       />
 
       <LoginModal

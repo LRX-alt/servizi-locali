@@ -11,7 +11,7 @@ export default function AdminCategoriePage() {
   const { isAuthenticated, isAdmin, categorie, setCategorie } = useAppStore();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ nome: '', icona: '🔧', descrizione: '' });
+  const [form, setForm] = useState({ nome: '', icona: '🔧', descrizione: '', show_in_home: false, home_order: '' });
   const [dbLoading, setDbLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
 
@@ -43,7 +43,16 @@ export default function AdminCategoriePage() {
     })();
   }, [setCategorie]);
 
-  type CategoriaRow = { id: string; nome: string; icona: string; descrizione: string; ord?: number; sottocategorie?: string[] };
+  type CategoriaRow = {
+    id: string;
+    nome: string;
+    icona: string;
+    descrizione: string;
+    ord?: number;
+    sottocategorie?: string[];
+    show_in_home?: boolean;
+    home_order?: number | null;
+  };
   const persist = (next: CategoriaRow[]) => {
     setCategorie(next);
     (async () => {
@@ -64,7 +73,7 @@ export default function AdminCategoriePage() {
 
   const resetForm = () => {
     setEditingId(null);
-    setForm({ nome: '', icona: '🔧', descrizione: '' });
+    setForm({ nome: '', icona: '🔧', descrizione: '', show_in_home: false, home_order: '' });
     setShowForm(false);
   };
 
@@ -75,7 +84,14 @@ export default function AdminCategoriePage() {
     if (!nome) return;
     const baseId = slugify(nome) || 'categoria';
     if (editingId) {
-      const updated = categorie.map(c => c.id === editingId ? { ...c, nome, icona: form.icona, descrizione: form.descrizione } : c);
+      const updated = categorie.map(c => c.id === editingId ? {
+        ...c,
+        nome,
+        icona: form.icona,
+        descrizione: form.descrizione,
+        show_in_home: Boolean(form.show_in_home),
+        home_order: form.show_in_home ? (form.home_order === '' ? null : Number(form.home_order)) : null,
+      } : c);
       persist(updated);
       resetForm();
       return;
@@ -86,7 +102,18 @@ export default function AdminCategoriePage() {
     while (existingIds.has(id)) {
       id = `${baseId}-${i++}`;
     }
-    const next = [...categorie, { id, nome, icona: form.icona, descrizione: form.descrizione, sottocategorie: [] }];
+    const next = [
+      ...categorie,
+      {
+        id,
+        nome,
+        icona: form.icona,
+        descrizione: form.descrizione,
+        sottocategorie: [],
+        show_in_home: Boolean(form.show_in_home),
+        home_order: form.show_in_home ? (form.home_order === '' ? null : Number(form.home_order)) : null,
+      }
+    ];
     persist(next);
     resetForm();
   };
@@ -110,7 +137,7 @@ export default function AdminCategoriePage() {
               </button>
               <h1 className="text-2xl font-bold text-gray-900">Categorie</h1>
             </div>
-            <button onClick={() => { setEditingId(null); setForm({ nome: '', icona: '🔧', descrizione: '' }); setShowForm(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2 cursor-pointer">
+            <button onClick={() => { setEditingId(null); setForm({ nome: '', icona: '🔧', descrizione: '', show_in_home: false, home_order: '' }); setShowForm(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2 cursor-pointer">
               <Plus className="w-4 h-4" /> Nuova Categoria
             </button>
           </div>
@@ -134,10 +161,68 @@ export default function AdminCategoriePage() {
               <div className="font-semibold text-gray-900">{cat.nome}</div>
               <div className="text-sm text-gray-800">{cat.descrizione}</div>
               <div className="text-xs text-gray-600">{cat.sottocategorie?.join(', ')}</div>
+
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                <label className="flex items-center justify-between gap-3 text-sm text-gray-900">
+                  <span className="font-medium">Mostra in home</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(cat.show_in_home)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      const next = categorie.map((c) =>
+                        c.id === cat.id
+                          ? { ...c, show_in_home: checked, home_order: checked ? (c.home_order ?? null) : null }
+                          : c
+                      );
+                      persist(next);
+                    }}
+                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded cursor-pointer"
+                    aria-label={`Mostra ${cat.nome} in home`}
+                  />
+                </label>
+
+                <label className="flex items-center justify-between gap-3 text-sm text-gray-900">
+                  <span className="font-medium">Ordine home</span>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={cat.home_order ?? ''}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      const parsed = raw === '' ? NaN : Number(raw);
+                      const next = categorie.map((c) =>
+                        c.id === cat.id
+                          ? { ...c, home_order: raw === '' ? null : (Number.isFinite(parsed) ? Math.trunc(parsed) : null) }
+                          : c
+                      );
+                      persist(next);
+                    }}
+                    disabled={!cat.show_in_home}
+                    className="w-28 border rounded px-2 py-1 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label={`Ordine in home per ${cat.nome}`}
+                  />
+                </label>
+                <p className="text-xs text-gray-600">
+                  Suggerimento: imposta 1–12 per definire l’ordine delle categorie in evidenza.
+                </p>
+              </div>
+
               <div className="mt-3 flex gap-2">
                 <button
                   className="px-3 py-1 rounded bg-blue-600 text-white text-sm flex items-center gap-1 cursor-pointer"
-                  onClick={() => { setEditingId(cat.id); setForm({ nome: cat.nome, icona: cat.icona, descrizione: cat.descrizione || '' }); setShowForm(true); }}
+                  onClick={() => {
+                    setEditingId(cat.id);
+                    setForm({
+                      nome: cat.nome,
+                      icona: cat.icona,
+                      descrizione: cat.descrizione || '',
+                      show_in_home: Boolean(cat.show_in_home),
+                      home_order: cat.home_order == null ? '' : String(cat.home_order),
+                    });
+                    setShowForm(true);
+                  }}
                 >
                   <Edit3 className="w-4 h-4" /> Modifica
                 </button>
@@ -173,6 +258,30 @@ export default function AdminCategoriePage() {
               <div>
                 <label className="block text-sm text-gray-900 mb-1">Descrizione</label>
                 <textarea className="w-full border rounded px-3 py-2 text-gray-900" rows={3} value={form.descrizione} onChange={e => setForm({ ...form, descrizione: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 text-sm text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.show_in_home)}
+                    onChange={(e) => setForm({ ...form, show_in_home: e.target.checked, home_order: e.target.checked ? form.home_order : '' })}
+                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded cursor-pointer"
+                  />
+                  Mostra in home
+                </label>
+                <div>
+                  <label className="block text-sm text-gray-900 mb-1">Ordine home</label>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    disabled={!form.show_in_home}
+                    value={form.home_order}
+                    onChange={(e) => setForm({ ...form, home_order: e.target.value })}
+                    className="w-full border rounded px-3 py-2 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="es. 1"
+                  />
+                </div>
               </div>
             </div>
             <div className="mt-6 flex items-center justify-end gap-2">

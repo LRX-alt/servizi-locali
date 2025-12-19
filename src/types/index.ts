@@ -52,6 +52,10 @@ export interface Categoria {
   icona: string;
   descrizione: string;
   sottocategorie?: string[];
+  // Campi DB (opzionali) per gestione home/ordinamenti
+  ord?: number;
+  show_in_home?: boolean;
+  home_order?: number | null;
 }
 
 export interface Recensione {
