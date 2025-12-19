@@ -1,5 +1,12 @@
 import { supabase } from './supabase';
 import type { Database } from './supabase';
+import type {
+  DisponibilitaSettimanale,
+  DisponibilitaEccezione,
+  SupabaseDisponibilitaSettimanale,
+  SupabaseDisponibilitaEccezione,
+  TipoEccezione,
+} from '@/types';
 
 type Utente = Database['public']['Tables']['utenti']['Row'];
 type Professionista = Database['public']['Tables']['professionisti']['Row'];
@@ -494,5 +501,189 @@ export const serviziHelpers = {
       .eq('id', servizioId);
 
     if (error) throw error;
+  },
+};
+
+// ===== DISPONIBILITÀ CALENDARIO =====
+export const disponibilitaHelpers = {
+  // Converti da formato Supabase a formato locale
+  convertSettimanale(s: SupabaseDisponibilitaSettimanale): DisponibilitaSettimanale {
+    return {
+      id: s.id,
+      professionistaId: s.professionista_id,
+      giornoSettimana: s.giorno_settimana,
+      oraInizio: s.ora_inizio,
+      oraFine: s.ora_fine,
+      attivo: s.attivo,
+      createdAt: new Date(s.created_at),
+      updatedAt: new Date(s.updated_at),
+    };
+  },
+
+  convertEccezione(e: SupabaseDisponibilitaEccezione): DisponibilitaEccezione {
+    return {
+      id: e.id,
+      professionistaId: e.professionista_id,
+      data: new Date(e.data),
+      tipo: e.tipo,
+      oraInizio: e.ora_inizio || undefined,
+      oraFine: e.ora_fine || undefined,
+      note: e.note || undefined,
+      createdAt: new Date(e.created_at),
+      updatedAt: new Date(e.updated_at),
+    };
+  },
+
+  // Get disponibilità settimanale per professionista
+  async getDisponibilitaSettimanale(profId: string): Promise<DisponibilitaSettimanale[]> {
+    const { data, error } = await supabase
+      .from('disponibilita_settimanale')
+      .select('*')
+      .eq('professionista_id', profId)
+      .order('giorno_settimana', { ascending: true });
+
+    if (error) throw error;
+    return (data || []).map(this.convertSettimanale);
+  },
+
+  // Upsert disponibilità settimanale (crea o aggiorna)
+  async upsertDisponibilitaSettimanale(
+    profId: string,
+    giornoSettimana: number,
+    oraInizio: string,
+    oraFine: string,
+    attivo: boolean = true
+  ) {
+    const { data, error } = await supabase
+      .from('disponibilita_settimanale')
+      .upsert(
+        {
+          professionista_id: profId,
+          giorno_settimana: giornoSettimana,
+          ora_inizio: oraInizio,
+          ora_fine: oraFine,
+          attivo,
+        },
+        {
+          onConflict: 'professionista_id,giorno_settimana',
+        }
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+    return this.convertSettimanale(data);
+  },
+
+  // Elimina disponibilità settimanale
+  async deleteDisponibilitaSettimanale(profId: string, giornoSettimana: number) {
+    const { error } = await supabase
+      .from('disponibilita_settimanale')
+      .delete()
+      .eq('professionista_id', profId)
+      .eq('giorno_settimana', giornoSettimana);
+
+    if (error) throw error;
+  },
+
+  // Get eccezioni per professionista (con range date opzionale)
+  async getEccezioni(
+    profId: string,
+    dataInizio?: Date,
+    dataFine?: Date
+  ): Promise<DisponibilitaEccezione[]> {
+    let query = supabase
+      .from('disponibilita_eccezioni')
+      .select('*')
+      .eq('professionista_id', profId)
+      .order('data', { ascending: true });
+
+    if (dataInizio) {
+      query = query.gte('data', dataInizio.toISOString().split('T')[0]);
+    }
+    if (dataFine) {
+      query = query.lte('data', dataFine.toISOString().split('T')[0]);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(this.convertEccezione);
+  },
+
+  // Upsert eccezione
+  async upsertEccezione(
+    profId: string,
+    data: Date,
+    tipo: TipoEccezione,
+    oraInizio?: string,
+    oraFine?: string,
+    note?: string
+  ) {
+    const { data: result, error } = await supabase
+      .from('disponibilita_eccezioni')
+      .upsert(
+        {
+          professionista_id: profId,
+          data: data.toISOString().split('T')[0],
+          tipo,
+          ora_inizio: oraInizio || null,
+          ora_fine: oraFine || null,
+          note: note || null,
+        },
+        {
+          onConflict: 'professionista_id,data',
+        }
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+    return this.convertEccezione(result);
+  },
+
+  // Elimina eccezione
+  async deleteEccezione(profId: string, data: Date) {
+    const { error } = await supabase
+      .from('disponibilita_eccezioni')
+      .delete()
+      .eq('professionista_id', profId)
+      .eq('data', data.toISOString().split('T')[0]);
+
+    if (error) throw error;
+  },
+
+  // Verifica disponibilità per una data/ora specifica
+  async isDisponibile(profId: string, data: Date, ora: string): Promise<boolean> {
+    const giornoSettimana = (data.getDay() + 6) % 7; // Converti a 0=Lunedì, 6=Domenica
+    const dataStr = data.toISOString().split('T')[0];
+
+    // Controlla prima le eccezioni
+    const { data: eccezione } = await supabase
+      .from('disponibilita_eccezioni')
+      .select('tipo, ora_inizio, ora_fine')
+      .eq('professionista_id', profId)
+      .eq('data', dataStr)
+      .maybeSingle();
+
+    if (eccezione) {
+      if (eccezione.tipo === 'non_disponibile') return false;
+      if (eccezione.tipo === 'disponibile') return true;
+      if (eccezione.tipo === 'orari_custom') {
+        if (!eccezione.ora_inizio || !eccezione.ora_fine) return false;
+        return ora >= eccezione.ora_inizio && ora <= eccezione.ora_fine;
+      }
+    }
+
+    // Controlla disponibilità settimanale
+    const { data: settimanale } = await supabase
+      .from('disponibilita_settimanale')
+      .select('ora_inizio, ora_fine')
+      .eq('professionista_id', profId)
+      .eq('giorno_settimana', giornoSettimana)
+      .eq('attivo', true)
+      .maybeSingle();
+
+    if (!settimanale) return false;
+    return ora >= settimanale.ora_inizio && ora <= settimanale.ora_fine;
   },
 }; 

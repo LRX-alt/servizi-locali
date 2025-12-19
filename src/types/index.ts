@@ -197,4 +197,54 @@ export interface SupabaseProfessionista {
   ultimo_accesso?: string;
   partita_iva?: string;
   codice_fiscale?: string;
+}
+
+// Tipi per disponibilità calendario
+export type TipoEccezione = 'disponibile' | 'non_disponibile' | 'orari_custom';
+
+export interface DisponibilitaSettimanale {
+  id: string;
+  professionistaId: string;
+  giornoSettimana: number; // 0=Lunedì, 6=Domenica
+  oraInizio: string; // formato HH:mm
+  oraFine: string; // formato HH:mm
+  attivo: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DisponibilitaEccezione {
+  id: string;
+  professionistaId: string;
+  data: Date;
+  tipo: TipoEccezione;
+  oraInizio?: string; // formato HH:mm (solo per tipo 'orari_custom')
+  oraFine?: string; // formato HH:mm (solo per tipo 'orari_custom')
+  note?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Tipi Supabase per disponibilità
+export interface SupabaseDisponibilitaSettimanale {
+  id: string;
+  professionista_id: string;
+  giorno_settimana: number;
+  ora_inizio: string;
+  ora_fine: string;
+  attivo: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupabaseDisponibilitaEccezione {
+  id: string;
+  professionista_id: string;
+  data: string;
+  tipo: TipoEccezione;
+  ora_inizio?: string;
+  ora_fine?: string;
+  note?: string;
+  created_at: string;
+  updated_at: string;
 } 

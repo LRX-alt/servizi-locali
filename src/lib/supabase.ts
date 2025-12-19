@@ -237,6 +237,73 @@ export interface Database {
           updated_at?: string;
         };
       };
+      disponibilita_settimanale: {
+        Row: {
+          id: string;
+          professionista_id: string;
+          giorno_settimana: number;
+          ora_inizio: string;
+          ora_fine: string;
+          attivo: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          professionista_id: string;
+          giorno_settimana: number;
+          ora_inizio: string;
+          ora_fine: string;
+          attivo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          professionista_id?: string;
+          giorno_settimana?: number;
+          ora_inizio?: string;
+          ora_fine?: string;
+          attivo?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      disponibilita_eccezioni: {
+        Row: {
+          id: string;
+          professionista_id: string;
+          data: string;
+          tipo: 'disponibile' | 'non_disponibile' | 'orari_custom';
+          ora_inizio: string | null;
+          ora_fine: string | null;
+          note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          professionista_id: string;
+          data: string;
+          tipo: 'disponibile' | 'non_disponibile' | 'orari_custom';
+          ora_inizio?: string | null;
+          ora_fine?: string | null;
+          note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          professionista_id?: string;
+          data?: string;
+          tipo?: 'disponibile' | 'non_disponibile' | 'orari_custom';
+          ora_inizio?: string | null;
+          ora_fine?: string | null;
+          note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 } 

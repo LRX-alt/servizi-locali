@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Servizio, Recensione, Categoria } from '@/types';
 import Avatar from '@/components/Avatar';
+import CalendarioDisponibilita from '@/components/CalendarioDisponibilita';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -747,16 +748,22 @@ export default function DashboardPage() {
     </div>
   );
 
-  const renderCalendar = () => (
-    <div className="bg-white p-6 rounded-lg shadow-sm border">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Calendario disponibilità</h3>
-      <div className="text-center py-12">
-        <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-600">Calendario in sviluppo</p>
-        <p className="text-sm text-gray-500">Qui potrai gestire la tua disponibilità</p>
-      </div>
-    </div>
-  );
+  const renderCalendar = () => {
+    if (!professionistaLoggato?.id) {
+      return (
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="text-center py-12">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Caricamento calendario...</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <CalendarioDisponibilita professionistaId={professionistaLoggato.id} />
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
