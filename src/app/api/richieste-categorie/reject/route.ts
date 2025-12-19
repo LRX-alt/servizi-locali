@@ -88,15 +88,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Invia email di notifica (async, non blocca la risposta)
-    sendRejectionEmail(
+    // Invia email di notifica (best-effort)
+    const emailResult = await sendRejectionEmail(
       richiesta.richiedente_email,
       richiesta.richiedente_nome,
       richiesta.nome_categoria,
       motivo
-    ).catch((err) => console.error('Errore invio email:', err));
+    );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, email: emailResult });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Errore';
     return NextResponse.json({ error: msg }, { status: 500 });
@@ -111,8 +111,9 @@ async function sendRejectionEmail(
 ) {
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY non configurato, email non inviata');
-    return;
+    const err = 'RESEND_API_KEY non configurato, email non inviata';
+    console.warn(err);
+    return { sent: false, error: err };
   }
 
   try {
@@ -125,7 +126,7 @@ async function sendRejectionEmail(
       body: JSON.stringify({
         from: process.env.EMAIL_FROM || 'Servizi Locali <noreply@servizilocali.it>',
         to: email,
-        subject: `❌ Richiesta categoria &quot;${categoriaNome}&quot; non approvata`,
+        subject: `❌ Richiesta categoria "${categoriaNome}" non approvata`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #EF4444;">Richiesta Non Approvata</h2>
@@ -152,11 +153,13 @@ async function sendRejectionEmail(
     });
 
     if (!res.ok) {
-      throw new Error(`Email API error: ${res.status}`);
+      const text = await res.text().catch(() => '');
+      throw new Error(`Email API error: ${res.status} ${text}`.trim());
     }
+    return { sent: true };
   } catch (error) {
     console.error('Errore invio email rifiuto:', error);
-    throw error;
+    return { sent: false, error: error instanceof Error ? error.message : 'Errore invio email' };
   }
 }
 

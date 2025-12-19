@@ -122,12 +122,10 @@ export async function POST(req: Request) {
       // Non fallire, la categoria è già stata creata
     }
 
-    // Invia email di notifica (async, non blocca la risposta)
-    sendApprovalEmail(richiesta.richiedente_email, richiesta.richiedente_nome, nome).catch(
-      (err) => console.error('Errore invio email:', err)
-    );
+    // Invia email di notifica (best-effort)
+    const emailResult = await sendApprovalEmail(richiesta.richiedente_email, richiesta.richiedente_nome, nome);
 
-    return NextResponse.json({ success: true, categoria: nuovaCategoria });
+    return NextResponse.json({ success: true, categoria: nuovaCategoria, email: emailResult });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Errore';
     return NextResponse.json({ error: msg }, { status: 500 });
@@ -138,8 +136,9 @@ async function sendApprovalEmail(email: string, nome: string, categoriaNome: str
   // Usa Resend o altro servizio email
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY non configurato, email non inviata');
-    return;
+    const err = 'RESEND_API_KEY non configurato, email non inviata';
+    console.warn(err);
+    return { sent: false, error: err };
   }
 
   try {
@@ -175,11 +174,13 @@ async function sendApprovalEmail(email: string, nome: string, categoriaNome: str
     });
 
     if (!res.ok) {
-      throw new Error(`Email API error: ${res.status}`);
+      const text = await res.text().catch(() => '');
+      throw new Error(`Email API error: ${res.status} ${text}`.trim());
     }
+    return { sent: true };
   } catch (error) {
     console.error('Errore invio email approvazione:', error);
-    throw error;
+    return { sent: false, error: error instanceof Error ? error.message : 'Errore invio email' };
   }
 }
 

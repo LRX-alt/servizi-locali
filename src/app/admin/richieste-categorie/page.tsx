@@ -21,7 +21,7 @@ interface RichiestaCategoria {
 
 export default function AdminRichiesteCategoriePage() {
   const router = useRouter();
-  const { isAuthenticated, isAdmin } = useAppStore();
+  const { isAuthenticated, isAdmin, logout } = useAppStore();
   const [richieste, setRichieste] = useState<RichiestaCategoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,12 +36,34 @@ export default function AdminRichiesteCategoriePage() {
     if (isAuthenticated && !isAdmin) router.push('/admin');
   }, [isAuthenticated, isAdmin, router]);
 
+  const devAdminEnabled = process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true';
+
+  // Ritorna:
+  // - string: token valido
+  // - undefined: dev-bypass attivo (ok, prosegui senza Authorization)
+  // - null: non autorizzato -> redirect
+  const ensureAdminSessionOrRedirect = async (): Promise<string | undefined | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token || undefined;
+    if (!token && (devAdminEnabled && isAdmin)) {
+      // In locale con dev-bypass possiamo operare senza token
+      return undefined;
+    }
+    if (!token) {
+      setError('Sessione admin scaduta: effettua nuovamente il login.');
+      await logout();
+      router.push('/admin');
+      return null;
+    }
+    return token;
+  };
+
   const loadRichieste = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || undefined;
+      const token = await ensureAdminSessionOrRedirect();
+      if (token === null) return;
       const res = await fetch(`/api/richieste-categorie/list?status=${filtroStato}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -67,8 +89,8 @@ export default function AdminRichiesteCategoriePage() {
     if (!richiestaSelezionata || !formApprove.nome || !formApprove.icona) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || undefined;
+      const token = await ensureAdminSessionOrRedirect();
+      if (token === null) return;
       const res = await fetch('/api/richieste-categorie/approve', {
         method: 'POST',
         headers: {
@@ -101,8 +123,8 @@ export default function AdminRichiesteCategoriePage() {
     if (!richiestaSelezionata) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || undefined;
+      const token = await ensureAdminSessionOrRedirect();
+      if (token === null) return;
       const res = await fetch('/api/richieste-categorie/reject', {
         method: 'POST',
         headers: {

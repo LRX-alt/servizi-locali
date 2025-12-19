@@ -7,6 +7,13 @@ import RichiediCategoriaModal from './RichiediCategoriaModal';
 import PhoneInput from './PhoneInput';
 import type { Categoria } from '@/types';
 
+const ALTRO_TEMPORANEO: Categoria = {
+  id: 'altro-temporaneo',
+  nome: 'Altro',
+  icona: '➕',
+  descrizione: 'Categoria temporanea in attesa di approvazione',
+};
+
 interface RegisterProfessionistaModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -46,8 +53,58 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
   const [showPassword, setShowPassword] = useState(false);
   const [showRichiediCategoria, setShowRichiediCategoria] = useState(false);
   const [categoriaRichiesta, setCategoriaRichiesta] = useState<string | null>(null);
+  const [mostraAltroTemporaneo, setMostraAltroTemporaneo] = useState(false);
   const [categorieCaricate, setCategorieCaricate] = useState<Categoria[]>([]);
   const [loadingCategorie, setLoadingCategorie] = useState(true);
+
+  // Funzione per calcolare la forza della password
+  const calculatePasswordStrength = (password: string): { score: number; level: 'vuota' | 'debole' | 'media' | 'forte' | 'molto_forte'; requirements: { label: string; met: boolean }[] } => {
+    if (!password) {
+      return {
+        score: 0,
+        level: 'vuota',
+        requirements: [
+          { label: 'Almeno 8 caratteri', met: false },
+          { label: 'Almeno una lettera maiuscola', met: false },
+          { label: 'Almeno una lettera minuscola', met: false },
+          { label: 'Almeno un numero', met: false },
+          { label: 'Almeno un carattere speciale', met: false },
+        ],
+      };
+    }
+
+    const requirements = [
+      { label: 'Almeno 8 caratteri', met: password.length >= 8 },
+      { label: 'Almeno una lettera maiuscola', met: /[A-Z]/.test(password) },
+      { label: 'Almeno una lettera minuscola', met: /[a-z]/.test(password) },
+      { label: 'Almeno un numero', met: /[0-9]/.test(password) },
+      { label: 'Almeno un carattere speciale (!@#$%^&*)', met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) },
+    ];
+
+    const metCount = requirements.filter(r => r.met).length;
+    let score = 0;
+    let level: 'debole' | 'media' | 'forte' | 'molto_forte' = 'debole';
+
+    // Calcolo score basato su requisiti e lunghezza
+    score += requirements[0].met ? 20 : 0; // Lunghezza
+    score += requirements[1].met ? 20 : 0; // Maiuscola
+    score += requirements[2].met ? 20 : 0; // Minuscola
+    score += requirements[3].met ? 20 : 0; // Numero
+    score += requirements[4].met ? 20 : 0; // Speciale
+
+    // Bonus per lunghezza extra
+    if (password.length >= 12) score += 10;
+    if (password.length >= 16) score += 10;
+
+    if (score < 40) level = 'debole';
+    else if (score < 70) level = 'media';
+    else if (score < 90) level = 'forte';
+    else level = 'molto_forte';
+
+    return { score, level, requirements };
+  };
+
+  const passwordStrength = calculatePasswordStrength(formData.password);
 
   // Carica categorie dal database
   useEffect(() => {
@@ -67,8 +124,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
             { id: 'pulizie', nome: 'Pulizie', icona: '🧹', descrizione: '' },
             { id: 'traslochi', nome: 'Traslochi', icona: '📦', descrizione: '' },
             { id: 'ristrutturazioni', nome: 'Ristrutturazioni', icona: '🏗️', descrizione: '' },
-            { id: 'informatica', nome: 'Informatica', icona: '💻', descrizione: '' },
-            { id: 'altro', nome: 'Altro', icona: '🔧', descrizione: '' },
+          { id: 'informatica', nome: 'Informatica', icona: '💻', descrizione: '' },
           ]);
         }
       } catch (error) {
@@ -82,7 +138,6 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
           { id: 'traslochi', nome: 'Traslochi', icona: '📦', descrizione: '' },
           { id: 'ristrutturazioni', nome: 'Ristrutturazioni', icona: '🏗️', descrizione: '' },
           { id: 'informatica', nome: 'Informatica', icona: '💻', descrizione: '' },
-          { id: 'altro', nome: 'Altro', icona: '🔧', descrizione: '' },
         ]);
       } finally {
         setLoadingCategorie(false);
@@ -102,6 +157,11 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
     'Consulenza',
     'Preventivi gratuiti'
   ];
+
+  const categorieFiltrate = categorieCaricate.filter(c => c.nome.toLowerCase() !== 'altro');
+  const categorieDaMostrare = mostraAltroTemporaneo
+    ? [...categorieFiltrate, ALTRO_TEMPORANEO]
+    : categorieFiltrate;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +188,15 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
       nextInvalid.zona_servizio
     ) {
       setError('Tutti i campi obbligatori devono essere compilati');
+      return;
+    }
+
+    // Validazione forza password
+    const passwordStrengthCheck = calculatePasswordStrength(formData.password);
+    const unmetRequirements = passwordStrengthCheck.requirements.filter(r => !r.met);
+    if (unmetRequirements.length > 0) {
+      setError(`La password non soddisfa tutti i requisiti. Verifica: ${unmetRequirements.map(r => r.label).join(', ')}`);
+      setInvalid(prev => ({ ...prev, password: true }));
       return;
     }
 
@@ -254,6 +323,79 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+
+            {/* Indicatore forza password */}
+            {formData.password && (
+              <div className="mt-2 space-y-2">
+                {/* Barra di progresso */}
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      passwordStrength.level === 'debole'
+                        ? 'bg-red-500'
+                        : passwordStrength.level === 'media'
+                        ? 'bg-yellow-500'
+                        : passwordStrength.level === 'forte'
+                        ? 'bg-blue-500'
+                        : 'bg-green-500'
+                    }`}
+                    style={{ width: `${passwordStrength.score}%` }}
+                  />
+                </div>
+
+                {/* Etichetta livello */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-600">
+                    Forza password:{' '}
+                    <span
+                      className={
+                        passwordStrength.level === 'debole'
+                          ? 'text-red-600'
+                          : passwordStrength.level === 'media'
+                          ? 'text-yellow-600'
+                          : passwordStrength.level === 'forte'
+                          ? 'text-blue-600'
+                          : 'text-green-600'
+                      }
+                    >
+                      {passwordStrength.level === 'vuota'
+                        ? ''
+                        : passwordStrength.level === 'debole'
+                        ? 'Debole'
+                        : passwordStrength.level === 'media'
+                        ? 'Media'
+                        : passwordStrength.level === 'forte'
+                        ? 'Forte'
+                        : 'Molto Forte'}
+                    </span>
+                  </span>
+                  <span className="text-xs text-gray-500">{formData.password.length} caratteri</span>
+                </div>
+
+                {/* Lista requisiti */}
+                <div className="bg-gray-50 border border-gray-200 rounded-md p-3 space-y-1.5">
+                  <p className="text-xs font-medium text-gray-700 mb-1.5">Requisiti password:</p>
+                  {passwordStrength.requirements.map((req, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <div
+                        className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${
+                          req.met ? 'bg-green-500' : 'bg-gray-300'
+                        }`}
+                      >
+                        {req.met && (
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-xs ${req.met ? 'text-green-700' : 'text-gray-600'}`}>
+                        {req.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -295,7 +437,7 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
                 <option value="">
                   {loadingCategorie ? 'Caricamento categorie...' : 'Seleziona categoria'}
                 </option>
-                {categorieCaricate.map(categoria => (
+                {categorieDaMostrare.map(categoria => (
                   <option key={categoria.id} value={categoria.nome}>
                     {categoria.icona} {categoria.nome}
                   </option>
@@ -487,11 +629,8 @@ export default function RegisterProfessionistaModal({ isOpen, onClose, onSwitchT
           onRequestSent={(categoriaNome) => {
             setCategoriaRichiesta(categoriaNome);
             setShowRichiediCategoria(false);
-            // Suggerisci di selezionare "Altro" se disponibile
-            const categoriaAltro = categorieCaricate.find(c => c.nome.toLowerCase() === 'altro');
-            if (categoriaAltro && !formData.categoria_servizio) {
-              handleInputChange('categoria_servizio', categoriaAltro.nome);
-            }
+            setMostraAltroTemporaneo(true);
+            handleInputChange('categoria_servizio', ALTRO_TEMPORANEO.nome);
           }}
         />
       </div>

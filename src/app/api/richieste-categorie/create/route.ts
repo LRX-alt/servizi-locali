@@ -16,10 +16,29 @@ export async function POST(req: Request) {
 
     const { nome_categoria, descrizione, richiedente_email, richiedente_nome } = body;
 
+    // Log per debug (solo in sviluppo)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Richiesta ricevuta:', {
+        nome_categoria: nome_categoria?.substring(0, 50),
+        has_descrizione: !!descrizione,
+        richiedente_email: richiedente_email?.substring(0, 30) + '...',
+        richiedente_nome: richiedente_nome?.substring(0, 30),
+      });
+    }
+
     // Validazione
     if (!nome_categoria || !richiedente_email || !richiedente_nome) {
+      const missingFields: string[] = [];
+      if (!nome_categoria) missingFields.push('nome_categoria');
+      if (!richiedente_email) missingFields.push('richiedente_email');
+      if (!richiedente_nome) missingFields.push('richiedente_nome');
+      
+      console.error('Campi mancanti nella richiesta:', missingFields);
       return NextResponse.json(
-        { error: 'Nome categoria, email e nome sono obbligatori' },
+        { 
+          error: 'Nome categoria, email e nome sono obbligatori',
+          details: `Campi mancanti: ${missingFields.join(', ')}`
+        },
         { status: 400 }
       );
     }
@@ -35,14 +54,47 @@ export async function POST(req: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
-    if (!supabaseUrl || !anonKey || !serviceKey) {
-      return NextResponse.json({ error: 'Configurazione mancante' }, { status: 500 });
+    
+    // Verifica configurazione con messaggio specifico
+    const missingVars: string[] = [];
+    if (!supabaseUrl) missingVars.push('NEXT_PUBLIC_SUPABASE_URL');
+    if (!anonKey) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    if (!serviceKey) missingVars.push('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (missingVars.length > 0) {
+      console.error('Variabili d\'ambiente mancanti:', missingVars);
+      console.error('Variabili disponibili:', {
+        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        nodeEnv: process.env.NODE_ENV,
+      });
+      return NextResponse.json(
+        { 
+          error: 'Configurazione mancante',
+          details: `Variabili d'ambiente mancanti: ${missingVars.join(', ')}. Verifica il file .env.local o le variabili d'ambiente del server. Se hai modificato .env.local, riavvia il server di sviluppo.`
+        },
+        { status: 500 }
+      );
     }
 
     // Usa anon key per le verifiche (pubbliche)
-    const supabase = createClient(supabaseUrl, anonKey);
+    // Disabilita refresh automatico del token per evitare errori con sessioni scadute
+    const supabase = createClient(supabaseUrl, anonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
     // Usa service role key per l'insert (bypassa RLS per endpoint pubblico)
-    const adminClient = createClient(supabaseUrl, serviceKey);
+    const adminClient = createClient(supabaseUrl, serviceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
 
     // Verifica se la categoria esiste già
     const { data: categoriaEsistente, error: categoriaError } = await supabase

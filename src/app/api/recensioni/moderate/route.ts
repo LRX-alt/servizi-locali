@@ -54,16 +54,45 @@ export async function POST(req: Request) {
 
     // Usa service role per bypassare RLS, dopo aver verificato il ruolo admin
     const adminClient = createClient(supabaseUrl, serviceKey);
-    const { error: updErr } = await adminClient
+    const { data: updated, error: updErr } = await adminClient
       .from('recensioni')
       .update({ stato: newState })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id, professionista_id')
+      .single();
 
     if (updErr) {
       return NextResponse.json({ error: updErr.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    const professionistaId = updated?.professionista_id as string | undefined;
+    if (professionistaId) {
+      // Ricalcola rating + numero recensioni approvate per il professionista
+      const { data: reviews, error: revErr } = await adminClient
+        .from('recensioni')
+        .select('rating')
+        .eq('professionista_id', professionistaId)
+        .eq('stato', 'approvata');
+
+      if (revErr) {
+        return NextResponse.json({ error: revErr.message }, { status: 500 });
+      }
+
+      const ratings = (reviews || []).map((r: { rating: number }) => Number(r.rating) || 0);
+      const count = ratings.length;
+      const avg = count > 0 ? ratings.reduce((a, b) => a + b, 0) / count : 0;
+
+      const { error: profErr } = await adminClient
+        .from('professionisti')
+        .update({ rating: avg, numero_recensioni: count })
+        .eq('id', professionistaId);
+
+      if (profErr) {
+        return NextResponse.json({ error: profErr.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ success: true, stato: newState, professionista_id: professionistaId });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Errore';
     return NextResponse.json({ error: msg }, { status: 500 });

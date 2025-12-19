@@ -20,10 +20,34 @@ interface RecensioneItem {
 
 export default function AdminRecensioniPage() {
   const router = useRouter();
-  const { isAuthenticated, isAdmin, moderateRecensione, error, setError } = useAppStore();
+  const { isAuthenticated, isAdmin, moderateRecensione, error, setError, logout } = useAppStore();
   const [items, setItems] = useState<RecensioneItem[]>([]);
-  const [status, setStatus] = useState<'pending' | 'approvata' | 'rifiutata' | 'all'>('all');
+  const [status, setStatus] = useState<'pending' | 'approvata' | 'rifiutata' | 'all'>('pending');
   const [loading, setLoading] = useState(false);
+  const [moderatingId, setModeratingId] = useState<string | null>(null);
+  const [refreshNonce, setRefreshNonce] = useState(0);
+
+  const devAdminEnabled = process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true';
+
+  // Ritorna:
+  // - string: token valido
+  // - undefined: dev-bypass attivo (ok, prosegui senza Authorization)
+  // - null: non autorizzato -> redirect
+  const ensureAdminSessionOrRedirect = async (): Promise<string | undefined | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token || undefined;
+    if (!token && (devAdminEnabled && isAdmin)) {
+      // In locale con dev-bypass possiamo operare senza token
+      return undefined;
+    }
+    if (!token) {
+      setError('Sessione admin scaduta: effettua nuovamente il login.');
+      await logout();
+      router.push('/admin');
+      return null;
+    }
+    return token;
+  };
 
   useEffect(() => {
     // Reindirizza solo se siamo autenticati ma NON admin
@@ -35,8 +59,8 @@ export default function AdminRecensioniPage() {
     const load = async () => {
       try {
         setLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        const token = await ensureAdminSessionOrRedirect();
+        if (token === null) return;
         const res = await fetch(`/api/recensioni/list?status=${status}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
@@ -52,14 +76,31 @@ export default function AdminRecensioniPage() {
     if (isAuthenticated && isAdmin) {
       load();
     }
-  }, [isAuthenticated, isAdmin, router, status, setError]);
+  }, [isAuthenticated, isAdmin, router, status, setError, refreshNonce]);
 
   const onModerate = async (id: string, action: 'approve' | 'reject') => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token || null;
-    await moderateRecensione(id, action, async () => token);
-    // Ricarica
-    setStatus(s => s); // trigger effect
+    if (moderatingId) return; // evita doppi click
+    setModeratingId(id);
+    try {
+      const token = await ensureAdminSessionOrRedirect();
+      if (token === null) return;
+
+      // Aggiornamento ottimistico UI
+      const nextState = action === 'approve' ? 'approvata' : 'rifiutata';
+      setItems(prev => prev.map(r => (r.id === id ? { ...r, stato: nextState } : r)));
+
+      await moderateRecensione(id, action, async () => token ?? null);
+
+      // Se stiamo filtrando "pending", rimuovi subito dalla lista
+      if (status === 'pending') {
+        setItems(prev => prev.filter(r => r.id !== id));
+      }
+
+      // Forza refresh dati da DB per riallineare eventuali discrepanze
+      setRefreshNonce(n => n + 1);
+    } finally {
+      setModeratingId(null);
+    }
   };
 
   // Stato di attesa autenticazione / verifica admin
@@ -95,16 +136,28 @@ export default function AdminRecensioniPage() {
               </button>
               <h1 className="text-2xl font-bold text-gray-900">Moderazione Recensioni</h1>
             </div>
-            <select
-              value={status}
-              onChange={e => setStatus(e.target.value as 'pending' | 'approvata' | 'rifiutata' | 'all')}
-              className="border rounded-md px-3 py-2"
-            >
-              <option value="pending">In attesa</option>
-              <option value="approvata">Approvate</option>
-              <option value="rifiutata">Rifiutate</option>
-              <option value="all">Tutte</option>
-            </select>
+            <div className="flex items-center gap-2">
+              {([
+                { key: 'pending', label: 'In attesa' },
+                { key: 'approvata', label: 'Approvate' },
+                { key: 'rifiutata', label: 'Rifiutate' },
+                { key: 'all', label: 'Tutte' },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => setStatus(opt.key)}
+                  className={`px-3 py-2 rounded-md border text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    status === opt.key
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -132,25 +185,47 @@ export default function AdminRecensioniPage() {
                     <div className="mt-2 text-xs text-gray-500">Stato: {r.stato}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {r.stato === 'pending' ? (
+                    {r.stato === 'pending' && (
                       <>
                         <button
                           onClick={() => onModerate(r.id, 'approve')}
-                          className="inline-flex items-center gap-1 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700"
+                          disabled={moderatingId === r.id}
+                          className="inline-flex items-center gap-1 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Approva"
                         >
                           <Check className="w-4 h-4" /> Approva
                         </button>
                         <button
                           onClick={() => onModerate(r.id, 'reject')}
-                          className="inline-flex items-center gap-1 bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700"
+                          disabled={moderatingId === r.id}
+                          className="inline-flex items-center gap-1 bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Rifiuta"
                         >
                           <X className="w-4 h-4" /> Rifiuta
                         </button>
                       </>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-sm text-gray-600"><Clock className="w-4 h-4" /> Nessuna azione</span>
+                    )}
+
+                    {r.stato === 'approvata' && (
+                      <button
+                        onClick={() => onModerate(r.id, 'reject')}
+                        disabled={moderatingId === r.id}
+                        className="inline-flex items-center gap-1 bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Rifiuta (rimuove la recensione dal profilo pubblico)"
+                      >
+                        <X className="w-4 h-4" /> Rifiuta
+                      </button>
+                    )}
+
+                    {r.stato === 'rifiutata' && (
+                      <button
+                        onClick={() => onModerate(r.id, 'approve')}
+                        disabled={moderatingId === r.id}
+                        className="inline-flex items-center gap-1 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Approva (pubblica la recensione sul profilo)"
+                      >
+                        <Check className="w-4 h-4" /> Approva
+                      </button>
                     )}
                   </div>
                 </div>

@@ -43,6 +43,7 @@ export default function RichiediCategoriaModal({
     setError('');
     setLoading(true);
 
+    // Validazione nome categoria
     if (!nomeCategoria.trim()) {
       setError('Il nome categoria è obbligatorio');
       setLoading(false);
@@ -55,6 +56,30 @@ export default function RichiediCategoriaModal({
       return;
     }
 
+    // Validazione email e nome richiedente
+    const emailTrimmed = richiedenteEmail?.trim() || '';
+    const nomeTrimmed = richiedenteNome?.trim() || '';
+    
+    if (!emailTrimmed) {
+      setError('Email richiedente mancante. Compila prima il campo email nel form di registrazione.');
+      setLoading(false);
+      return;
+    }
+
+    if (!nomeTrimmed) {
+      setError('Nome richiedente mancante. Compila prima i campi nome e cognome nel form di registrazione.');
+      setLoading(false);
+      return;
+    }
+
+    // Validazione formato email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      setError('L\'email fornita non è valida. Verifica il campo email nel form di registrazione.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/richieste-categorie/create', {
         method: 'POST',
@@ -62,16 +87,27 @@ export default function RichiediCategoriaModal({
         body: JSON.stringify({
           nome_categoria: nomeCategoria.trim(),
           descrizione: descrizione.trim() || null,
-          richiedente_email: richiedenteEmail,
-          richiedente_nome: richiedenteNome,
+          richiedente_email: emailTrimmed,
+          richiedente_nome: nomeTrimmed,
         }),
       });
 
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonError) {
+        console.error('Errore parsing risposta JSON:', jsonError);
+        throw new Error('Errore durante l\'elaborazione della risposta del server');
+      }
 
       if (!res.ok) {
         // Messaggio più user-friendly per errori di duplicate
-        const errorMessage = data.error || 'Errore durante l\'invio della richiesta';
+        const errorMessage = data?.error || data?.details || `Errore durante l'invio della richiesta (${res.status})`;
+        console.error('Errore API:', {
+          status: res.status,
+          statusText: res.statusText,
+          error: data,
+        });
         throw new Error(errorMessage);
       }
 
@@ -128,6 +164,16 @@ export default function RichiediCategoriaModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            {(!richiedenteEmail?.trim() || !richiedenteNome?.trim()) && (
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md flex items-start space-x-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <strong>Attenzione:</strong> Per inviare una richiesta, compila prima i campi <strong>Email</strong>
+                  {!richiedenteEmail?.trim() && ' (obbligatorio)'} e <strong>Nome e Cognome</strong>
+                  {!richiedenteNome?.trim() && ' (obbligatori)'} nel form di registrazione.
+                </div>
+              </div>
+            )}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-start space-x-2">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -186,7 +232,7 @@ export default function RichiediCategoriaModal({
               </button>
               <button
                 type="submit"
-                disabled={loading || !nomeCategoria.trim()}
+                disabled={loading || !nomeCategoria.trim() || !richiedenteEmail?.trim() || !richiedenteNome?.trim()}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Invio...' : 'Invia Richiesta'}

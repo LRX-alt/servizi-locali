@@ -524,6 +524,36 @@ export const useAppStore = create<AppState>()(
           const { user } = await authHelpers.loginUser(form.email, form.password);
           
           if (user) {
+            const role = (user.app_metadata as Record<string, unknown> | undefined)?.role;
+            const isAdminUser = role === 'admin';
+
+            // Se è admin (ruolo su Supabase), non richiedere per forza il profilo in tabella `utenti`
+            // (potrebbe non esistere). Serve solo per abilitare il pannello e usare il token.
+            if (isAdminUser) {
+              set({
+                utente: {
+                  id: user.id,
+                  nome: 'Admin',
+                  cognome: '',
+                  email: user.email || form.email,
+                  telefono: '',
+                  indirizzo: '',
+                  comune: '',
+                  preferenze: [],
+                  recensioniScritte: [],
+                  professionistiPreferiti: [],
+                  dataRegistrazione: new Date().toISOString(),
+                  avatar: '',
+                },
+                professionistaLoggato: null,
+                userType: 'utente',
+                isAuthenticated: true,
+                isAdmin: true,
+                authLoading: false,
+              });
+              return;
+            }
+
             const profile = await authHelpers.getUserProfile(user.id);
             
             if (profile) {
@@ -846,12 +876,19 @@ export const useAppStore = create<AppState>()(
       moderateRecensione: async (id, action, getAccessToken) => {
         try {
           const token = await getAccessToken();
-          if (!token) throw new Error('Token mancante');
+          // Dev-bypass: in sviluppo locale può mancare la sessione Supabase (login admin "finto")
+          const devAdminEnabled =
+            process.env.NODE_ENV !== 'production' &&
+            process.env.NEXT_PUBLIC_ENABLE_DEV_ADMIN === 'true' &&
+            get().isAdmin === true;
+
+          if (!token && !devAdminEnabled) throw new Error('Sessione scaduta: effettua nuovamente il login admin.');
+
           const res = await fetch('/api/recensioni/moderate', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
             body: JSON.stringify({ id, action })
           });
@@ -859,7 +896,9 @@ export const useAppStore = create<AppState>()(
             const { error } = await res.json().catch(() => ({ error: 'Errore richiesta' }));
             throw new Error(error || 'Errore');
           }
-          // Aggiorna elenco professionisti per riflettere rating
+          // Forza aggiornamento elenco professionisti per riflettere rating/numero recensioni
+          // (loadProfessionisti ha una cache a tempo che va bypassata dopo una moderazione)
+          set({ lastUpdate: null });
           await get().loadProfessionisti();
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Errore moderazione';
